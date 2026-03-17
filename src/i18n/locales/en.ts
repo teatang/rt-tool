@@ -39,7 +39,8 @@ export default {
     search: 'Search',
     rename: 'Rename',
     generate: 'Generate',
-    now: 'Now'
+    now: 'Now',
+    convert: 'Convert'
   },
   messages: {
     copySuccess: 'Copied to clipboard',
@@ -63,6 +64,12 @@ export default {
     count: 'Count',
     algorithm: 'Algorithm',
     version: 'Version',
-    namespace: 'Namespace'
+    namespace: 'Namespace',
+    timestamp: 'Timestamp',
+    date: 'Date',
+    timestampToDate: 'Timestamp → Date',
+    dateToTimestamp: 'Date → Timestamp',
+    enterTimestamp: 'Enter timestamp',
+    enterDate: 'Enter date (YYYY-MM-DD HH:mm:ss)'
   }
 }

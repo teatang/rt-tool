@@ -39,7 +39,8 @@ export default {
     search: '搜索',
     rename: '重命名',
     generate: '生成',
-    now: '当前时间'
+    now: '当前时间',
+    convert: '转换'
   },
   messages: {
     copySuccess: '已复制到剪贴板',
@@ -63,6 +64,12 @@ export default {
     count: '数量',
     algorithm: '算法',
     version: '版本',
-    namespace: '命名空间'
+    namespace: '命名空间',
+    timestamp: '时间戳',
+    date: '日期',
+    timestampToDate: '时间戳 → 日期',
+    dateToTimestamp: '日期 → 时间戳',
+    enterTimestamp: '输入时间戳',
+    enterDate: '输入日期 (YYYY-MM-DD HH:mm:ss)'
   }
 }

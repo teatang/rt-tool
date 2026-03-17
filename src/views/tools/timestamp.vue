@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const timestamp = ref('')
 const customDate = ref('')
@@ -15,7 +15,8 @@ let intervalId: number | undefined
 const updateCurrentTime = () => {
   const now = new Date()
   currentTimestamp.value = Math.floor(now.getTime() / 1000)
-  currentDate.value = now.toLocaleString()
+  // 根据当前语言格式化日期
+  currentDate.value = now.toLocaleString(locale.value === 'zh' ? 'zh-CN' : 'en-US')
 }
 
 onMounted(() => {
@@ -35,7 +36,7 @@ const convertToDate = () => {
   try {
     const ts = parseInt(timestamp.value)
     const date = new Date(ts * 1000)
-    return date.toLocaleString()
+    return date.toLocaleString(locale.value === 'zh' ? 'zh-CN' : 'en-US')
   } catch {
     return t('messages.error')
   }
@@ -71,10 +72,10 @@ const copyTimestamp = async () => {
         <span>{{ t('actions.now') }}</span>
       </template>
       <el-descriptions :column="2" border>
-        <el-descriptions-item label="Timestamp">
+        <el-descriptions-item :label="t('labels.timestamp')">
           {{ currentTimestamp }}
         </el-descriptions-item>
-        <el-descriptions-item label="Date">
+        <el-descriptions-item :label="t('labels.date')">
           {{ currentDate }}
         </el-descriptions-item>
       </el-descriptions>
@@ -87,15 +88,15 @@ const copyTimestamp = async () => {
       <el-col :span="12">
         <el-card>
           <template #header>
-            <span>Timestamp → Date</span>
+            <span>{{ t('labels.timestampToDate') }}</span>
           </template>
           <el-input
             v-model="timestamp"
-            placeholder="Enter timestamp"
+            :placeholder="t('labels.enterTimestamp')"
             class="mb-4"
           />
           <el-button type="primary" @click="convertToDate">
-            Convert
+            {{ t('actions.convert') }}
           </el-button>
           <div class="result mt-4">
             {{ convertToDate() }}
@@ -105,15 +106,15 @@ const copyTimestamp = async () => {
       <el-col :span="12">
         <el-card>
           <template #header>
-            <span>Date → Timestamp</span>
+            <span>{{ t('labels.dateToTimestamp') }}</span>
           </template>
           <el-input
             v-model="customDate"
-            placeholder="Enter date (YYYY-MM-DD HH:mm:ss)"
+            :placeholder="t('labels.enterDate')"
             class="mb-4"
           />
           <el-button type="primary" @click="convertToTimestamp">
-            Convert
+            {{ t('actions.convert') }}
           </el-button>
           <div class="result mt-4">
             {{ convertToTimestamp() }}

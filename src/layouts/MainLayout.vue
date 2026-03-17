@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '../stores/theme'
-
-const route = useRoute()
 
 // 引入 Element Plus 图标 - 每个工具使用独特的图标
 import {
@@ -29,6 +27,19 @@ import {
 
 const { t, locale } = useI18n()
 const themeStore = useThemeStore()
+const route = useRoute()
+
+// 当前选中的菜单 - 使用 ref 并监听路由变化
+const activeMenu = ref('base64')
+
+// 监听路由变化更新菜单选中状态
+watch(
+  () => route.path,
+  (path) => {
+    activeMenu.value = path.startsWith('/') ? path.slice(1) : path || 'base64'
+  },
+  { immediate: true }
+)
 
 // 侧边栏是否折叠
 const isCollapse = ref(false)
@@ -69,13 +80,6 @@ const menuItems = computed(() => [
     ]
   }
 ])
-
-// 当前选中的菜单 - 使用路径匹配
-const activeMenu = computed(() => {
-  const path = route.path
-  // 从路径中提取工具名称 (如 /base64 -> base64)
-  return path.startsWith('/') ? path.slice(1) : path || 'base64'
-})
 
 // 主题选项
 const themeOptions = [
@@ -204,6 +208,53 @@ const changeLocale = () => {
 .sidebar-menu {
   border-right: none;
   flex: 1;
+}
+
+/* 选中菜单项的高亮样式 */
+.sidebar-menu :deep(.el-menu-item.is-active) {
+  background-color: var(--el-color-primary-light-9) !important;
+  color: var(--el-color-primary) !important;
+  font-weight: 600;
+}
+
+.sidebar-menu :deep(.el-menu-item.is-active .el-icon) {
+  color: var(--el-color-primary) !important;
+}
+
+/* 菜单项 hover 样式 */
+.sidebar-menu :deep(.el-menu-item:hover) {
+  background-color: var(--el-fill-color-light) !important;
+}
+
+/* 子菜单标题高亮 */
+.sidebar-menu :deep(.el-sub-menu.is-active > .el-sub-menu__title) {
+  color: var(--el-color-primary) !important;
+}
+
+.sidebar-menu :deep(.el-sub-menu.is-active > .el-sub-menu__title .el-icon) {
+  color: var(--el-color-primary) !important;
+}
+
+/* 深色模式下的选中高亮 */
+html.dark .sidebar-menu :deep(.el-menu-item.is-active) {
+  background-color: rgba(64, 158, 255, 0.15) !important;
+  color: var(--el-color-primary) !important;
+}
+
+html.dark .sidebar-menu :deep(.el-menu-item.is-active .el-icon) {
+  color: var(--el-color-primary) !important;
+}
+
+html.dark .sidebar-menu :deep(.el-menu-item:hover) {
+  background-color: var(--el-fill-color-light) !important;
+}
+
+html.dark .sidebar-menu :deep(.el-sub-menu.is-active > .el-sub-menu__title) {
+  color: var(--el-color-primary) !important;
+}
+
+html.dark .sidebar-menu :deep(.el-sub-menu.is-active > .el-sub-menu__title .el-icon) {
+  color: var(--el-color-primary) !important;
 }
 
 .header {
