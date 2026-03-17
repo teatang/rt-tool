@@ -61,6 +61,8 @@ export default {
     oldName: '原名称',
     newName: '新名称',
     count: '数量',
-    algorithm: '算法'
+    algorithm: '算法',
+    version: '版本',
+    namespace: '命名空间'
   }
 }

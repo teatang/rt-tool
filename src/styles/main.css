@@ -21,7 +21,105 @@ body,
   box-sizing: border-box;
 }
 
-/* Dark mode styles */
-.dark {
+/* 亮色模式 */
+html {
+  color-scheme: light;
+}
+
+/* 深色模式 */
+html.dark {
   color-scheme: dark;
+}
+
+/* Element Plus 深色模式 CSS 变量 */
+html.dark {
+  --el-bg-color: #141414;
+  --el-bg-color-overlay: #1d1e1f;
+  --el-bg-color-page: #0a0a0a;
+  --el-bg-color-text: #ffffff;
+  --el-text-color-primary: #e5eaf3;
+  --el-text-color-regular: #cfd3dc;
+  --el-text-color-secondary: #a3a6ad;
+  --el-text-color-placeholder: #8d9095;
+  --el-text-color-disabled: #4c4d4f;
+  --el-border-color: #414243;
+  --el-border-color-2: #363637;
+  --el-border-color-3: #2d2d2d;
+  --el-border-color-light: #414243;
+  --el-border-color-lighter: #363637;
+  --el-fill-color: #1d1e1f;
+  --el-fill-color-light: #262727;
+  --el-fill-color-lighter: #2d2d2d;
+  --el-fill-color-extra-light: #1a1a1a;
+  --el-fill-color-dark: #141414;
+  --el-mask-color: rgba(0, 0, 0, 0.8);
+  --el-border-radius: 4px;
+}
+
+/* 深色模式下的组件样式覆盖 */
+html.dark .el-menu {
+  background-color: var(--el-bg-color);
+  border-right-color: var(--el-border-color);
+}
+
+html.dark .el-menu-item,
+html.dark .el-sub-menu__title {
+  color: var(--el-text-color-regular);
+}
+
+html.dark .el-menu-item:hover,
+html.dark .el-sub-menu__title:hover {
+  background-color: var(--el-fill-color-light);
+}
+
+html.dark .el-input__wrapper,
+html.dark .el-textarea__inner {
+  background-color: var(--el-fill-color);
+  box-shadow: 0 0 0 1px var(--el-border-color) inset;
+}
+
+html.dark .el-input__inner,
+html.dark .el-textarea__inner {
+  color: var(--el-text-color-regular);
+}
+
+html.dark .el-button {
+  --el-button-bg-color: var(--el-fill-color);
+  --el-button-border-color: var(--el-border-color);
+  --el-button-text-color: var(--el-text-color-regular);
+  --el-button-hover-bg-color: var(--el-fill-color-light);
+  --el-button-hover-border-color: var(--el-border-color-light);
+  --el-button-hover-text-color: var(--el-text-color-primary);
+}
+
+html.dark .el-card {
+  background-color: var(--el-bg-color-overlay);
+  border-color: var(--el-border-color);
+  color: var(--el-text-color-regular);
+}
+
+html.dark .el-select-dropdown,
+html.dark .el-dropdown-menu {
+  background-color: var(--el-bg-color-overlay);
+  border-color: var(--el-border-color);
+}
+
+html.dark .el-descriptions__cell,
+html.dark .el-descriptions__label {
+  background-color: var(--el-bg-color-overlay);
+  color: var(--el-text-color-regular);
+}
+
+html.dark .el-checkbox__label,
+html.dark .el-radio__label {
+  color: var(--el-text-color-regular);
+}
+
+html.dark .el-select-dropdown__item {
+  color: var(--el-text-color-regular);
+}
+
+html.dark .el-select-dropdown__item.hover,
+html.dark .el-select-dropdown__item:hover {
+  background-color: var(--el-fill-color-light);
 }

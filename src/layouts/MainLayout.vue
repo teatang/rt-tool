@@ -1,7 +1,31 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { useThemeStore } from '../stores/theme'
+
+const route = useRoute()
+
+// 引入 Element Plus 图标 - 每个工具使用独特的图标
+import {
+  Document,
+  EditPen,
+  FolderOpened,
+  Tools,
+  Key,
+  Link,
+  Files,
+  Search,
+  DocumentChecked,
+  PictureFilled,
+  Clock,
+  Lock,
+  Fold,
+  Expand,
+  Stamp,
+  TrendCharts,
+  Film
+} from '@element-plus/icons-vue'
 
 const { t, locale } = useI18n()
 const themeStore = useThemeStore()
@@ -9,45 +33,49 @@ const themeStore = useThemeStore()
 // 侧边栏是否折叠
 const isCollapse = ref(false)
 
-// 菜单项配置
+// 菜单项配置 - 每个工具都有独特的图标
 const menuItems = computed(() => [
   {
     name: 'string',
     label: t('nav.string'),
-    icon: 'Document',
+    icon: Document,
     children: [
-      { name: 'base64', label: t('tools.base64'), icon: 'Key' },
-      { name: 'url', label: t('tools.url'), icon: 'Link' },
-      { name: 'json', label: t('tools.json'), icon: 'Document' },
-      { name: 'html', label: t('tools.html'), icon: 'Markup' },
-      { name: 'sql', label: t('tools.sql'), icon: 'Database' },
-      { name: 'regex', label: t('tools.regex'), icon: 'Search' }
+      { name: 'base64', label: t('tools.base64'), icon: Key },           // 加密相关
+      { name: 'url', label: t('tools.url'), icon: Link },                // 链接
+      { name: 'json', label: t('tools.json'), icon: Files },            // 文件集合
+      { name: 'html', label: t('tools.html'), icon: PictureFilled },    // 图片/HTML
+      { name: 'sql', label: t('tools.sql'), icon: TrendCharts },         // 数据/图表
+      { name: 'regex', label: t('tools.regex'), icon: DocumentChecked }           // 搜索/匹配
     ]
   },
   {
     name: 'file',
     label: t('nav.file'),
-    icon: 'Folder',
+    icon: FolderOpened,
     children: [
-      { name: 'fileSearch', label: t('tools.fileSearch'), icon: 'Search' },
-      { name: 'fileRename', label: t('tools.fileRename'), icon: 'Edit' }
+      { name: 'fileSearch', label: t('tools.fileSearch'), icon: Search },      // 搜索
+      { name: 'fileRename', label: t('tools.fileRename'), icon: EditPen }      // 编辑
     ]
   },
   {
     name: 'other',
     label: t('nav.other'),
-    icon: 'Tools',
+    icon: Tools,
     children: [
-      { name: 'mermaid', label: t('tools.mermaid'), icon: 'Picture' },
-      { name: 'timestamp', label: t('tools.timestamp'), icon: 'Clock' },
-      { name: 'uuid', label: t('tools.uuid'), icon: 'Key' },
-      { name: 'encrypt', label: t('tools.encrypt'), icon: 'Lock' }
+      { name: 'mermaid', label: t('tools.mermaid'), icon: Film },         // 图表/流程图
+      { name: 'timestamp', label: t('tools.timestamp'), icon: Clock },    // 时间
+      { name: 'uuid', label: t('tools.uuid'), icon: Stamp },              // 唯一标识
+      { name: 'encrypt', label: t('tools.encrypt'), icon: Lock }           // 锁定/加密
     ]
   }
 ])
 
-// 当前选中的菜单
-const activeMenu = ref('base64')
+// 当前选中的菜单 - 使用路径匹配
+const activeMenu = computed(() => {
+  const path = route.path
+  // 从路径中提取工具名称 (如 /base64 -> base64)
+  return path.startsWith('/') ? path.slice(1) : path || 'base64'
+})
 
 // 主题选项
 const themeOptions = [
@@ -72,8 +100,8 @@ const changeLocale = () => {
     <!-- 侧边栏 -->
     <el-aside :width="isCollapse ? '64px' : '220px'" class="sidebar">
       <div class="logo">
-        <span v-if="!isCollapse">{{ t('app.title') }}</span>
-        <span v-else>RT</span>
+        <el-icon class="logo-icon"><Tools /></el-icon>
+        <span v-if="!isCollapse" class="logo-text">{{ t('app.title') }}</span>
       </div>
       <el-menu
         :default-active="activeMenu"
@@ -106,7 +134,7 @@ const changeLocale = () => {
       <el-header class="header">
         <div class="header-left">
           <el-button
-            :icon="isCollapse ? 'Expand' : 'Fold'"
+            :icon="isCollapse ? Expand : Fold"
             @click="isCollapse = !isCollapse"
             text
           />
@@ -149,6 +177,8 @@ const changeLocale = () => {
   background-color: var(--el-bg-color);
   border-right: 1px solid var(--el-border-color-light);
   transition: width 0.3s;
+  display: flex;
+  flex-direction: column;
 }
 
 .logo {
@@ -156,13 +186,24 @@ const changeLocale = () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--el-border-color-light);
+}
+
+.logo-icon {
+  font-size: 24px;
+  color: var(--el-color-primary);
+}
+
+.logo-text {
   font-size: 18px;
   font-weight: bold;
-  border-bottom: 1px solid var(--el-border-color-light);
+  color: var(--el-text-color-primary);
 }
 
 .sidebar-menu {
   border-right: none;
+  flex: 1;
 }
 
 .header {

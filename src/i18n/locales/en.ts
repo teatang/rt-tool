@@ -61,6 +61,8 @@ export default {
     oldName: 'Old Name',
     newName: 'New Name',
     count: 'Count',
-    algorithm: 'Algorithm'
+    algorithm: 'Algorithm',
+    version: 'Version',
+    namespace: 'Namespace'
   }
 }
