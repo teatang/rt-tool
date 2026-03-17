@@ -40,7 +40,8 @@ export default {
     rename: '重命名',
     generate: '生成',
     now: '当前时间',
-    convert: '转换'
+    convert: '转换',
+    selectFolder: '选择文件夹'
   },
   messages: {
     copySuccess: '已复制到剪贴板',
@@ -58,6 +59,7 @@ export default {
     pattern: '模式',
     testString: '测试字符串',
     searchPath: '搜索路径',
+    selectFolder: '选择文件夹',
     keyword: '关键词',
     oldName: '原名称',
     newName: '新名称',

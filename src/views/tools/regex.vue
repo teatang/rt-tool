@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 
@@ -16,6 +16,38 @@ const flags = ref({
 
 const matches = ref<string[]>([])
 const error = ref('')
+
+// 生成带高亮的文本HTML
+const highlightedText = computed(() => {
+  if (!pattern.value || !testString.value || error.value) {
+    return escapeHtml(testString.value)
+  }
+
+  try {
+    const flagStr = Object.entries(flags.value)
+      .filter(([_, v]) => v)
+      .map(([k]) => k)
+      .join('')
+    const regex = new RegExp(pattern.value, flagStr)
+
+    // 使用replace配合正则来高亮匹配部分
+    const result = testString.value.replace(regex, (match) => {
+      return `<mark class="highlight">${escapeHtml(match)}</mark>`
+    })
+    return result
+  } catch {
+    return escapeHtml(testString.value)
+  }
+})
+
+// 转义HTML特殊字符
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
 
 const testRegex = () => {
   matches.value = []
@@ -83,6 +115,12 @@ const copyMatch = async (match: string) => {
         />
       </el-col>
       <el-col :span="12">
+        <!-- 原始文本高亮显示 -->
+        <div class="highlight-panel">
+          <div class="panel-header">{{ t('labels.testString') }}</div>
+          <div class="highlighted-text" v-html="highlightedText"></div>
+        </div>
+        <!-- 匹配结果列表 -->
         <div v-if="error" class="error-message">
           {{ error }}
         </div>
@@ -100,7 +138,7 @@ const copyMatch = async (match: string) => {
             <span class="match-text">{{ match }}</span>
           </div>
         </div>
-        <div v-else class="no-match">
+        <div v-else-if="testString && !error" class="no-match">
           {{ t('messages.noMatch') }}
         </div>
       </el-col>
@@ -118,6 +156,31 @@ const copyMatch = async (match: string) => {
 .flags {
   display: flex;
   gap: 16px;
+}
+.highlight-panel {
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+.panel-header {
+  padding: 8px 16px;
+  background-color: var(--el-fill-color-light);
+  font-weight: 600;
+  border-bottom: 1px solid var(--el-border-color-light);
+}
+.highlighted-text {
+  padding: 16px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: monospace;
+  line-height: 1.6;
+}
+.highlighted-text :deep(mark.highlight) {
+  background-color: var(--el-color-primary-light-8);
+  color: var(--el-color-primary);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: 600;
 }
 .error-message {
   color: var(--el-color-danger);

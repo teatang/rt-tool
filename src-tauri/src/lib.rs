@@ -57,6 +57,7 @@ fn rename_file(old_path: String, new_path: String) -> Result<(), String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![greet, search_files, rename_file])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

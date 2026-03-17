@@ -40,7 +40,8 @@ export default {
     rename: 'Rename',
     generate: 'Generate',
     now: 'Now',
-    convert: 'Convert'
+    convert: 'Convert',
+    selectFolder: 'Select Folder'
   },
   messages: {
     copySuccess: 'Copied to clipboard',
@@ -58,6 +59,7 @@ export default {
     pattern: 'Pattern',
     testString: 'Test String',
     searchPath: 'Search Path',
+    selectFolder: 'Select Folder',
     keyword: 'Keyword',
     oldName: 'Old Name',
     newName: 'New Name',

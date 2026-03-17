@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { invoke } from '@tauri-apps/api/core'
+import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { openPath } from '@tauri-apps/plugin-opener'
 import { ElMessage } from 'element-plus'
 
@@ -12,6 +13,22 @@ const keyword = ref('')
 const results = ref<string[]>([])
 const loading = ref(false)
 const error = ref('')
+
+// 选择文件夹
+const selectFolder = async () => {
+  try {
+    const selected = await openDialog({
+      directory: true,
+      multiple: false,
+      title: t('labels.selectFolder')
+    })
+    if (selected) {
+      searchPath.value = selected as string
+    }
+  } catch {
+    ElMessage.error(t('messages.error'))
+  }
+}
 
 const search = async () => {
   if (!searchPath.value || !keyword.value) {
@@ -56,11 +73,13 @@ const copyPath = async (path: string) => {
   <div class="tool-container">
     <h2>{{ t('tools.fileSearch') }}</h2>
     <div class="search-form">
-      <el-input
-        v-model="searchPath"
-        :placeholder="t('labels.searchPath')"
-        class="mb-4"
-      />
+      <div class="path-input mb-4">
+        <el-input
+          v-model="searchPath"
+          :placeholder="t('labels.searchPath')"
+        />
+        <el-button @click="selectFolder">{{ t('actions.selectFolder') }}</el-button>
+      </div>
       <el-input
         v-model="keyword"
         :placeholder="t('labels.keyword')"
@@ -105,6 +124,10 @@ const copyPath = async (path: string) => {
 }
 .search-form {
   margin-bottom: 20px;
+}
+.path-input {
+  display: flex;
+  gap: 8px;
 }
 .mb-4 {
   margin-bottom: 16px;
