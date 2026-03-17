@@ -6,7 +6,8 @@ import CryptoJS from 'crypto-js'
 
 const { t } = useI18n()
 
-const input = ref('')
+// 默认示例
+const input = ref('Hello World!')
 const output = ref('')
 const algorithm = ref('md5')
 const secret = ref('')

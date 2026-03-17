@@ -5,8 +5,9 @@ import { ElMessage } from 'element-plus'
 
 const { t } = useI18n()
 
-const pattern = ref('')
-const testString = ref('')
+// 默认示例
+const pattern = ref('\\d+')
+const testString = ref('Hello123World456!')
 const flags = ref({
   g: true,
   i: false,
@@ -47,7 +48,7 @@ const testRegex = () => {
   }
 }
 
-watch([pattern, testString, flags], testRegex, { deep: true })
+watch([pattern, testString, flags], testRegex, { deep: true, immediate: true })
 
 const copyMatch = async (match: string) => {
   try {
@@ -149,7 +150,7 @@ const copyMatch = async (match: string) => {
   color: var(--el-color-primary);
 }
 .match-text {
-  font-family: monospace;
+  font-weight: bold;
 }
 .no-match {
   color: var(--el-color-info);

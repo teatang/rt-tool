@@ -5,7 +5,8 @@ import { ElMessage } from 'element-plus'
 
 const { t } = useI18n()
 
-const input = ref('')
+// 默认示例
+const input = ref('{"name":"张三","age":25,"city":"北京","hobbies":["读书","编程","音乐"]}')
 const output = ref('')
 const isValid = ref(true)
 const indent = ref(2) // 默认2个空格

@@ -5,7 +5,8 @@ import { ElMessage } from 'element-plus'
 
 const { t } = useI18n()
 
-const input = ref('')
+// 默认示例
+const input = ref('https://www.example.com/path?name=张三&age=25')
 const output = ref('')
 
 const encode = () => {
@@ -43,29 +44,36 @@ const clear = () => {
   <div class="tool-container">
     <h2>{{ t('tools.url') }}</h2>
     <el-row :gutter="20">
+      <!-- 左侧：输入 -->
       <el-col :span="12">
-        <el-input
-          v-model="input"
-          type="textarea"
-          :rows="10"
-          :placeholder="t('labels.input')"
-        />
-        <div class="btn-group">
-          <el-button type="primary" @click="encode">{{ t('actions.encode') }}</el-button>
-          <el-button type="primary" @click="decode">{{ t('actions.decode') }}</el-button>
-          <el-button @click="clear">{{ t('actions.clear') }}</el-button>
+        <div class="panel">
+          <div class="panel-header">{{ t('labels.input') }}</div>
+          <el-input
+            v-model="input"
+            type="textarea"
+            :rows="12"
+          />
+          <div class="btn-group">
+            <el-button type="primary" @click="encode">{{ t('actions.encode') }}</el-button>
+            <el-button type="primary" @click="decode">{{ t('actions.decode') }}</el-button>
+            <el-button @click="clear">{{ t('actions.clear') }}</el-button>
+          </div>
         </div>
       </el-col>
+
+      <!-- 右侧：输出 -->
       <el-col :span="12">
-        <el-input
-          v-model="output"
-          type="textarea"
-          :rows="10"
-          :placeholder="t('labels.output')"
-          readonly
-        />
-        <div class="btn-group">
-          <el-button @click="copyOutput">{{ t('actions.copy') }}</el-button>
+        <div class="panel">
+          <div class="panel-header">{{ t('labels.output') }}</div>
+          <el-input
+            v-model="output"
+            type="textarea"
+            :rows="12"
+            readonly
+          />
+          <div class="btn-group">
+            <el-button @click="copyOutput">{{ t('actions.copy') }}</el-button>
+          </div>
         </div>
       </el-col>
     </el-row>
@@ -75,6 +83,16 @@ const clear = () => {
 <style scoped>
 .tool-container {
   max-width: 1200px;
+}
+.panel {
+  display: flex;
+  flex-direction: column;
+}
+.panel-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+  margin-bottom: 12px;
 }
 .btn-group {
   margin-top: 16px;
