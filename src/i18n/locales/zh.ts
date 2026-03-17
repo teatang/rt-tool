@@ -70,6 +70,7 @@ export default {
     timestampToDate: '时间戳 → 日期',
     dateToTimestamp: '日期 → 时间戳',
     enterTimestamp: '输入时间戳',
-    enterDate: '输入日期 (YYYY-MM-DD HH:mm:ss)'
+    enterDate: '输入日期 (YYYY-MM-DD HH:mm:ss)',
+    indent: '缩进'
   }
 }

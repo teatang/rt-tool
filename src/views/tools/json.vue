@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 
@@ -8,11 +8,26 @@ const { t } = useI18n()
 const input = ref('')
 const output = ref('')
 const isValid = ref(true)
+const indent = ref(2) // 默认2个空格
+
+// 空格数选项
+const indentOptions = [
+  { value: 1, label: '1' },
+  { value: 2, label: '2' },
+  { value: 4, label: '4' }
+]
+
+// 监听缩进变化，自动格式化
+watch(indent, () => {
+  if (input.value) {
+    format()
+  }
+})
 
 const format = () => {
   try {
     const parsed = JSON.parse(input.value)
-    output.value = JSON.stringify(parsed, null, 2)
+    output.value = JSON.stringify(parsed, null, indent.value)
     isValid.value = true
   } catch {
     isValid.value = false
@@ -51,31 +66,51 @@ const clear = () => {
   <div class="tool-container">
     <h2>{{ t('tools.json') }}</h2>
     <el-row :gutter="20">
+      <!-- 左侧：输入 -->
       <el-col :span="12">
-        <el-input
-          v-model="input"
-          type="textarea"
-          :rows="10"
-          :placeholder="t('labels.input')"
-          @input="isValid = true"
-        />
-        <div class="btn-group">
-          <el-button type="primary" @click="format">{{ t('actions.format') }}</el-button>
-          <el-button type="primary" @click="compress">{{ t('actions.compress') }}</el-button>
-          <el-button @click="clear">{{ t('actions.clear') }}</el-button>
+        <div class="panel">
+          <div class="panel-header">{{ t('labels.input') }}</div>
+          <el-input
+            v-model="input"
+            type="textarea"
+            :rows="12"
+            :placeholder="t('labels.input')"
+            @input="isValid = true"
+          />
+          <div class="btn-group">
+            <el-button type="primary" @click="format">{{ t('actions.format') }}</el-button>
+            <el-button type="primary" @click="compress">{{ t('actions.compress') }}</el-button>
+            <el-button @click="clear">{{ t('actions.clear') }}</el-button>
+          </div>
         </div>
       </el-col>
+
+      <!-- 右侧：输出 -->
       <el-col :span="12">
-        <el-input
-          v-model="output"
-          type="textarea"
-          :rows="10"
-          :placeholder="t('labels.output')"
-          readonly
-          :class="{ 'error-text': !isValid }"
-        />
-        <div class="btn-group">
-          <el-button @click="copyOutput">{{ t('actions.copy') }}</el-button>
+        <div class="panel">
+          <div class="panel-header">{{ t('labels.output') }}</div>
+          <el-input
+            v-model="output"
+            type="textarea"
+            :rows="12"
+            :placeholder="t('labels.output')"
+            readonly
+            :class="{ 'error-text': !isValid }"
+          />
+          <div class="output-actions">
+            <div class="indent-selector">
+              <span class="indent-label">{{ t('labels.indent') }}:</span>
+              <el-select v-model="indent" style="width: 80px">
+                <el-option
+                  v-for="option in indentOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :value="option.value"
+                />
+              </el-select>
+            </div>
+            <el-button @click="copyOutput">{{ t('actions.copy') }}</el-button>
+          </div>
         </div>
       </el-col>
     </el-row>
@@ -86,10 +121,36 @@ const clear = () => {
 .tool-container {
   max-width: 1200px;
 }
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.panel-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+  margin-bottom: 12px;
+}
 .btn-group {
   margin-top: 16px;
   display: flex;
   gap: 8px;
+}
+.output-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.indent-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.indent-label {
+  font-size: 14px;
+  color: var(--el-text-color-regular);
 }
 .error-text :deep(textarea) {
   color: var(--el-color-danger);

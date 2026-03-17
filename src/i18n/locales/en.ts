@@ -70,6 +70,7 @@ export default {
     timestampToDate: 'Timestamp → Date',
     dateToTimestamp: 'Date → Timestamp',
     enterTimestamp: 'Enter timestamp',
-    enterDate: 'Enter date (YYYY-MM-DD HH:mm:ss)'
+    enterDate: 'Enter date (YYYY-MM-DD HH:mm:ss)',
+    indent: 'Indent'
   }
 }
