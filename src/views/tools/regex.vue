@@ -2,6 +2,8 @@
 import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import { DocumentChecked } from '@element-plus/icons-vue'
+import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
 
@@ -94,7 +96,12 @@ const copyMatch = async (match: string) => {
 
 <template>
   <div class="tool-container">
-    <h2>{{ t('tools.regex') }}</h2>
+    <PageTitle
+      :icon="DocumentChecked"
+      :title="t('tools.regex')"
+      description="regex"
+      color="#ff6b6b"
+    />
     <el-row :gutter="20">
       <el-col :span="12">
         <el-input

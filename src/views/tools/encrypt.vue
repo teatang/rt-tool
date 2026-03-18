@@ -2,7 +2,9 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import { Lock } from '@element-plus/icons-vue'
 import CryptoJS from 'crypto-js'
+import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
 
@@ -78,7 +80,12 @@ const clear = () => {
 
 <template>
   <div class="tool-container">
-    <h2>{{ t('tools.encrypt') }}</h2>
+    <PageTitle
+      :icon="Lock"
+      :title="t('tools.encrypt')"
+      description="encrypt"
+      color="#e6a23c"
+    />
     <el-row :gutter="20">
       <el-col :span="12">
         <el-select v-model="algorithm" class="mb-4" @change="encrypt">

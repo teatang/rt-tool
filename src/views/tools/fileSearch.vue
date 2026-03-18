@@ -5,6 +5,8 @@ import { invoke } from '@tauri-apps/api/core'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { openPath } from '@tauri-apps/plugin-opener'
 import { ElMessage } from 'element-plus'
+import { Search } from '@element-plus/icons-vue'
+import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
 
@@ -71,7 +73,12 @@ const copyPath = async (path: string) => {
 
 <template>
   <div class="tool-container">
-    <h2>{{ t('tools.fileSearch') }}</h2>
+    <PageTitle
+      :icon="Search"
+      :title="t('tools.fileSearch')"
+      description="fileSearch"
+      color="#409eff"
+    />
     <div class="search-form">
       <div class="path-input mb-4">
         <el-input

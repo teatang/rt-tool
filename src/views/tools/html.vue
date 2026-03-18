@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import { PictureFilled } from '@element-plus/icons-vue'
+import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
 
@@ -58,7 +60,12 @@ const clear = () => {
 
 <template>
   <div class="tool-container">
-    <h2>{{ t('tools.html') }}</h2>
+    <PageTitle
+      :icon="PictureFilled"
+      :title="t('tools.html')"
+      description="html"
+      color="#909399"
+    />
     <el-row :gutter="20">
       <!-- 左侧：输入 -->
       <el-col :span="12">

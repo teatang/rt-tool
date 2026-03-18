@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import { Link } from '@element-plus/icons-vue'
+import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
 
@@ -42,7 +44,12 @@ const clear = () => {
 
 <template>
   <div class="tool-container">
-    <h2>{{ t('tools.url') }}</h2>
+    <PageTitle
+      :icon="Link"
+      :title="t('tools.url')"
+      description="url"
+      color="#409eff"
+    />
     <el-row :gutter="20">
       <!-- 左侧：输入 -->
       <el-col :span="12">

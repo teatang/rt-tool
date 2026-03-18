@@ -2,6 +2,8 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import { Film } from '@element-plus/icons-vue'
+import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
 
@@ -52,7 +54,12 @@ const copyCode = async () => {
 
 <template>
   <div class="tool-container">
-    <h2>{{ t('tools.mermaid') }}</h2>
+    <PageTitle
+      :icon="Film"
+      :title="t('tools.mermaid')"
+      description="mermaid"
+      color="#9c27b0"
+    />
     <el-row :gutter="20">
       <el-col :span="12">
         <el-input

@@ -2,7 +2,9 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import { Key } from '@element-plus/icons-vue'
 import CryptoJS from 'crypto-js'
+import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
 
@@ -49,7 +51,12 @@ const clear = () => {
 
 <template>
   <div class="tool-container">
-    <h2>{{ t('tools.base64') }}</h2>
+    <PageTitle
+      :icon="Key"
+      :title="t('tools.base64')"
+      description="base64"
+      color="#67c23a"
+    />
     <el-row :gutter="20">
       <!-- 左侧：输入 -->
       <el-col :span="12">

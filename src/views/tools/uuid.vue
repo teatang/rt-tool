@@ -2,7 +2,9 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import { Stamp } from '@element-plus/icons-vue'
 import CryptoJS from 'crypto-js'
+import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
 
@@ -124,7 +126,12 @@ const copyAll = async () => {
 
 <template>
   <div class="tool-container">
-    <h2>{{ t('tools.uuid') }}</h2>
+    <PageTitle
+      :icon="Stamp"
+      :title="t('tools.uuid')"
+      description="uuid"
+      color="#ff9800"
+    />
 
     <!-- 版本选择 -->
     <div class="form-item">

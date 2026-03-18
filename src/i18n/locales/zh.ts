@@ -74,5 +74,19 @@ export default {
     enterTimestamp: '输入时间戳',
     enterDate: '输入日期 (YYYY-MM-DD HH:mm:ss)',
     indent: '缩进'
+  },
+  descriptions: {
+    base64: 'Base64 编码与解码工具',
+    url: 'URL 编码与解码工具',
+    json: 'JSON 格式化与压缩工具',
+    html: 'HTML 格式化与压缩工具',
+    sql: 'SQL 格式化与压缩工具',
+    regex: '正则表达式测试工具',
+    fileSearch: '递归搜索目录中的文件',
+    fileRename: '批量重命名文件',
+    mermaid: 'Mermaid 图表编辑器',
+    timestamp: '时间戳转换工具',
+    uuid: 'UUID 生成器',
+    encrypt: 'MD5/SHA 哈希加密工具'
   }
 }

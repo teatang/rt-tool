@@ -3,6 +3,8 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { invoke } from '@tauri-apps/api/core'
 import { ElMessage } from 'element-plus'
+import { EditPen } from '@element-plus/icons-vue'
+import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
 
@@ -45,7 +47,12 @@ const clear = () => {
 
 <template>
   <div class="tool-container">
-    <h2>{{ t('tools.fileRename') }}</h2>
+    <PageTitle
+      :icon="EditPen"
+      :title="t('tools.fileRename')"
+      description="fileRename"
+      color="#f56c6c"
+    />
     <div class="rename-form">
       <el-input
         v-model="oldPath"

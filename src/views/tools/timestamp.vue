@@ -2,6 +2,8 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import { Clock } from '@element-plus/icons-vue'
+import PageTitle from '../../components/PageTitle.vue'
 
 const { t, locale } = useI18n()
 
@@ -65,7 +67,12 @@ const copyTimestamp = async () => {
 
 <template>
   <div class="tool-container">
-    <h2>{{ t('tools.timestamp') }}</h2>
+    <PageTitle
+      :icon="Clock"
+      :title="t('tools.timestamp')"
+      description="timestamp"
+      color="#00bcd4"
+    />
 
     <el-card class="mb-4">
       <template #header>
