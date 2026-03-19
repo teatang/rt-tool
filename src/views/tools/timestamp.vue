@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { Clock } from '@element-plus/icons-vue'
+import { getCurrentTimestamp, timestampToDate, dateToTimestamp, formatDate } from '@/utils/timestamp'
 import PageTitle from '../../components/PageTitle.vue'
 
 const { t, locale } = useI18n()
@@ -15,10 +16,9 @@ const currentDate = ref('')
 let intervalId: number | undefined
 
 const updateCurrentTime = () => {
-  const now = new Date()
-  currentTimestamp.value = Math.floor(now.getTime() / 1000)
+  currentTimestamp.value = getCurrentTimestamp()
   // 根据当前语言格式化日期
-  currentDate.value = now.toLocaleString(locale.value === 'zh' ? 'zh-CN' : 'en-US')
+  currentDate.value = formatDate(Date.now(), locale.value)
 }
 
 onMounted(() => {
@@ -34,25 +34,13 @@ onUnmounted(() => {
 
 const convertToDate = () => {
   if (!timestamp.value) return ''
-
-  try {
-    const ts = parseInt(timestamp.value)
-    const date = new Date(ts * 1000)
-    return date.toLocaleString(locale.value === 'zh' ? 'zh-CN' : 'en-US')
-  } catch {
-    return t('messages.error')
-  }
+  return timestampToDate(timestamp.value, locale.value)
 }
 
 const convertToTimestamp = () => {
   if (!customDate.value) return ''
-
-  try {
-    const date = new Date(customDate.value)
-    return Math.floor(date.getTime() / 1000)
-  } catch {
-    return t('messages.error')
-  }
+  const result = dateToTimestamp(customDate.value)
+  return typeof result === 'number' ? result : t('messages.error')
 }
 
 const copyTimestamp = async () => {

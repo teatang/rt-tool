@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { Stamp } from '@element-plus/icons-vue'
-import CryptoJS from 'crypto-js'
+import { generateUuid, UUID_NAMESPACES, type UuidVersion } from '@/utils/uuid'
 import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
@@ -17,89 +17,34 @@ const versionOptions = [
 ]
 
 // 当前选择的版本
-const version = ref('v4')
+const version = ref<UuidVersion>('v4')
 // 生成数量
 const count = ref(1)
 // 命名空间 (用于 v3/v5)
-const namespace = ref('6ba7b810-9dad-11d1-80b4-00c04fd430c8') // URL namespace
+const namespace = ref(UUID_NAMESPACES.URL)
 const name = ref('')
 // 生成结果
 const uuids = ref<string[]>([])
 
 // 预定义的命名空间
 const namespaceOptions = [
-  { value: '6ba7b810-9dad-11d1-80b4-00c04fd430c8', label: 'URL (6ba7b810-9dad-11d1-80b4-00c04fd430c8)' },
-  { value: '6ba7b811-9dad-11d1-80b4-00c04fd430c8', label: 'OID (6ba7b811-9dad-11d1-80b4-00c04fd430c8)' },
-  { value: '6ba7b812-9dad-11d1-80b4-00c04fd430c8', label: 'X500 (6ba7b812-9dad-11d1-80b4-00c04fd430c8)' }
+  { value: UUID_NAMESPACES.URL, label: 'URL (6ba7b810-9dad-11d1-80b4-00c04fd430c8)' },
+  { value: UUID_NAMESPACES.OID, label: 'OID (6ba7b811-9dad-11d1-80b4-00c04fd430c8)' },
+  { value: UUID_NAMESPACES.X500, label: 'X500 (6ba7b812-9dad-11d1-80b4-00c04fd430c8)' }
 ]
-
-// UUID v4 - 随机生成
-const generateV4 = (): string => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0
-    const v = c === 'x' ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
-}
-
-// UUID v1 - 基于时间戳
-const generateV1 = (): string => {
-  const now = Date.now()
-  const timeLow = (now & 0xffffffff).toString(16).padStart(8, '0')
-  const timeMid = ((now >> 32) & 0xffff).toString(16).padStart(4, '0')
-  const timeHiAndVersion = ((now >> 48) & 0x0fff) | 0x1000 // version 1
-  const clockSeqHiAndReserved = (Math.floor(Math.random() * 16384) & 0x3fff) | 0x8000
-  const clockSeqLow = clockSeqHiAndReserved & 0xff
-  const node = Array.from({ length: 6 }, () =>
-    Math.floor(Math.random() * 256).toString(16).padStart(2, '0')
-  ).join('')
-
-  return `${timeLow}-${timeMid}-${timeHiAndVersion.toString(16).padStart(4, '0')}-${clockSeqHiAndReserved.toString(16).padStart(4, '0')}-${clockSeqLow.toString(16).padStart(2, '0')}${node}`
-}
-
-// UUID v3/v5 - 基于命名空间和名称的哈希
-const generateV3V5 = (isV5: boolean): string => {
-  if (!name.value) {
-    return t('messages.error')
-  }
-
-  const hash = isV5
-    ? CryptoJS.SHA1(namespace.value + name.value).toString()
-    : CryptoJS.MD5(namespace.value + name.value).toString()
-
-  // 从哈希中提取 UUID 格式
-  const timeLow = hash.substring(0, 8)
-  const timeMid = hash.substring(8, 12)
-  const timeHiAndVersion = parseInt(hash.substring(12, 16), 16)
-  const version = isV5 ? 0x5000 : 0x3000
-  const clockSeqHiAndReserved = (parseInt(hash.substring(16, 18), 16) & 0x3f) | 0x80
-  const clockSeqLow = hash.substring(18, 20)
-  const node = hash.substring(20, 32)
-
-  return `${timeLow}-${timeMid}-${(timeHiAndVersion & 0x0fff | version).toString(16).padStart(4, '0')}-${clockSeqHiAndReserved.toString(16).padStart(2, '0')}${clockSeqLow}-${node}`
-}
 
 // 生成 UUID
 const generate = () => {
   uuids.value = []
 
   for (let i = 0; i < count.value; i++) {
-    let uuid = ''
-    switch (version.value) {
-      case 'v4':
-        uuid = generateV4()
-        break
-      case 'v1':
-        uuid = generateV1()
-        break
-      case 'v3':
-        uuid = generateV3V5(false)
-        break
-      case 'v5':
-        uuid = generateV3V5(true)
-        break
+    try {
+      const uuid = generateUuid(version.value, namespace.value, name.value)
+      uuids.value.push(uuid)
+    } catch {
+      ElMessage.error(t('messages.error'))
+      break
     }
-    uuids.value.push(uuid)
   }
 }
 

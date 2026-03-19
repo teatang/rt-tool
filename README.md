@@ -7,29 +7,38 @@
 ### 字符串工具
 - **Base64** - Base64 编码与解码
 - **URL 编码** - URL 编码与解码
-- **JSON** - JSON 格式化和压缩
+- **JSON** - JSON 格式化和压缩，支持自定义缩进
 - **HTML** - HTML 格式化和压缩
 - **SQL** - SQL 格式化和压缩
-- **正则** - 正则表达式测试
+- **正则** - 正则表达式测试，支持高亮显示匹配结果
 
 ### 文件工具
-- **文件搜索** - 按关键词搜索文件
+- **文件搜索** - 按关键词搜索文件，支持选择文件夹
 - **文件重命名** - 批量重命名文件
 
 ### 其他工具
 - **Mermaid** - Mermaid 图表编辑器
-- **时间戳** - 时间戳转换
-- **UUID** - UUID 生成器
-- **加密** - MD5/SHA 加密
+- **时间戳** - 时间戳转换，支持当前时间实时更新
+- **UUID** - UUID 生成器，支持 v1/v3/v4/v5 版本
+- **加密** - MD5/SHA/HMAC 加密
+
+### 主题系统
+- 支持浅色/深色模式
+- 支持跟随系统主题
+
+### 国际化
+- 支持中文/英文切换
 
 ## 技术栈
 
 - **前端**: Vue 3 + TypeScript
 - **状态管理**: Pinia
 - **UI 组件库**: Element Plus
-- **样式**: TailwindCSS
+- **样式**: TailwindCSS v4
 - **桌面框架**: Tauri v2
 - **国际化**: vue-i18n
+- **测试框架**: Vitest
+- **加密库**: CryptoJS
 
 ## 常用命令
 
@@ -48,6 +57,9 @@ pnpm tauri dev
 
 # 构建 Tauri 生产版本
 pnpm tauri build
+
+# 运行单元测试
+pnpm test
 ```
 
 ## 项目结构
@@ -56,22 +68,43 @@ pnpm tauri build
 rt-tool/
 ├── src/                    # Vue 前端源码
 │   ├── components/         # 可复用组件
-│   ├── layouts/            # 布局组件
-│   ├── router/             # Vue Router 配置
-│   ├── stores/             # Pinia 状态管理
-│   ├── styles/             # 全局样式
-│   ├── views/              # 页面组件
-│   │   └── tools/          # 工具组件
-│   ├── i18n/               # 国际化配置
-│   ├── __tests__/          # 单元测试
+│   ├── layouts/           # 布局组件
+│   ├── router/            # Vue Router 配置
+│   ├── stores/           # Pinia 状态管理
+│   ├── styles/            # 全局样式
+│   ├── utils/             # 工具函数 (含单元测试)
+│   ├── views/            # 页面组件
+│   │   └── tools/        # 工具组件
+│   ├── i18n/             # 国际化配置
 │   ├── App.vue
 │   └── main.ts
-├── src-tauri/              # Rust 后端源码
+├── src-tauri/             # Rust 后端源码
 │   ├── src/
-│   │   ├── lib.rs          # Tauri 命令
+│   │   ├── lib.rs        # Tauri 命令
 │   │   └── main.rs
 │   └── tauri.conf.json
 ├── package.json
 ├── vite.config.ts
-└── tsconfig.json
+├── tsconfig.json
+└── vitest.config.ts
 ```
+
+## 工具函数 (src/utils/)
+
+项目将工具的核心逻辑提取到独立的 TypeScript 文件中，便于单元测试：
+
+- `base64.ts` - Base64 编码/解码
+- `url.ts` - URL 编码/解码
+- `json.ts` - JSON 格式化和压缩
+- `html.ts` - HTML 格式化和压缩
+- `sql.ts` - SQL 格式化和压缩
+- `regex.ts` - 正则表达式测试
+- `encrypt.ts` - 加密工具
+- `timestamp.ts` - 时间戳转换
+- `uuid.ts` - UUID 生成
+
+每个工具函数都有对应的 `.test.ts` 单元测试文件。
+
+## 许可证
+
+本项目基于 [MIT](LICENSE) 许可证开源。
