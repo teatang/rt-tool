@@ -22,7 +22,10 @@ import {
   Expand,
   Stamp,
   TrendCharts,
-  Film
+  Film,
+  Sunny,
+  Moon,
+  Monitor
 } from '@element-plus/icons-vue'
 
 const { t, locale } = useI18n()
@@ -81,21 +84,9 @@ const menuItems = computed(() => [
   }
 ])
 
-// 主题选项
-const themeOptions = [
-  { value: 'light', label: t('theme.light') },
-  { value: 'dark', label: t('theme.dark') },
-  { value: 'system', label: t('theme.system') }
-]
-
 // 切换主题
 const changeTheme = (mode: 'light' | 'dark' | 'system') => {
   themeStore.setTheme(mode)
-}
-
-// 切换语言
-const changeLocale = () => {
-  locale.value = locale.value === 'zh' ? 'en' : 'zh'
 }
 </script>
 
@@ -144,23 +135,49 @@ const changeLocale = () => {
           />
         </div>
         <div class="header-right">
-          <!-- 切换语言按钮 -->
-          <el-button @click="changeLocale" text>
-            {{ locale === 'zh' ? 'EN' : '中' }}
-          </el-button>
-          <!-- 主题选择器 -->
-          <el-select
-            :model-value="themeStore.themeMode"
-            @change="changeTheme"
-            style="width: 100px"
-          >
-            <el-option
-              v-for="option in themeOptions"
-              :key="option.value"
-              :label="option.label"
-              :value="option.value"
-            />
-          </el-select>
+          <!-- 语言切换 -->
+          <div class="locale-switch">
+            <button
+              :class="['locale-btn', { active: locale === 'zh' }]"
+              @click="locale = 'zh'"
+            >
+              中
+            </button>
+            <button
+              :class="['locale-btn', { active: locale === 'en' }]"
+              @click="locale = 'en'"
+            >
+              EN
+            </button>
+          </div>
+
+          <!-- 主题切换 -->
+          <div class="theme-switch">
+            <el-tooltip :content="t('theme.light')" placement="bottom">
+              <button
+                :class="['theme-btn', { active: themeStore.themeMode === 'light' }]"
+                @click="changeTheme('light')"
+              >
+                <el-icon><Sunny /></el-icon>
+              </button>
+            </el-tooltip>
+            <el-tooltip :content="t('theme.dark')" placement="bottom">
+              <button
+                :class="['theme-btn', { active: themeStore.themeMode === 'dark' }]"
+                @click="changeTheme('dark')"
+              >
+                <el-icon><Moon /></el-icon>
+              </button>
+            </el-tooltip>
+            <el-tooltip :content="t('theme.system')" placement="bottom">
+              <button
+                :class="['theme-btn', { active: themeStore.themeMode === 'system' }]"
+                @click="changeTheme('system')"
+              >
+                <el-icon><Monitor /></el-icon>
+              </button>
+            </el-tooltip>
+          </div>
         </div>
       </el-header>
 
@@ -270,7 +287,76 @@ html.dark .sidebar-menu :deep(.el-sub-menu.is-active > .el-sub-menu__title .el-i
 .header-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+}
+
+/* 语言切换按钮组 */
+.locale-switch {
+  display: flex;
+  background: var(--el-fill-color-light);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.locale-btn {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.locale-btn:hover {
+  color: var(--el-text-color-primary);
+}
+
+.locale-btn.active {
+  background: var(--el-bg-color);
+  color: var(--el-color-primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 主题切换按钮组 */
+.theme-switch {
+  display: flex;
+  background: var(--el-fill-color-light);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.theme-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--el-text-color-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.theme-btn:hover {
+  color: var(--el-text-color-primary);
+  background: var(--el-fill-color);
+}
+
+.theme-btn.active {
+  background: var(--el-bg-color);
+  color: var(--el-color-primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.theme-btn .el-icon {
+  font-size: 16px;
 }
 
 .main-content {
