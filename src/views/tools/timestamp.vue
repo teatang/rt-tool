@@ -71,7 +71,7 @@ const copyTimestamp = async () => {
       :icon="Clock"
       :title="t('tools.timestamp')"
       description="timestamp"
-      color="#00bcd4"
+      color="#9c27b0"
     />
 
     <el-card class="mb-4">

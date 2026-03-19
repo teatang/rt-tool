@@ -130,7 +130,7 @@ const copyAll = async () => {
       :icon="Stamp"
       :title="t('tools.uuid')"
       description="uuid"
-      color="#ff9800"
+      color="#9c27b0"
     />
 
     <!-- 版本选择 -->

@@ -48,7 +48,7 @@ const clear = () => {
       :icon="Link"
       :title="t('tools.url')"
       description="url"
-      color="#409eff"
+      color="#67c23a"
     />
     <el-row :gutter="20">
       <!-- 左侧：输入 -->

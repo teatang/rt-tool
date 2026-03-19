@@ -100,7 +100,7 @@ const copyMatch = async (match: string) => {
       :icon="DocumentChecked"
       :title="t('tools.regex')"
       description="regex"
-      color="#ff6b6b"
+      color="#67c23a"
     />
     <el-row :gutter="20">
       <el-col :span="12">
