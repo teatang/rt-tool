@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { Files } from '@element-plus/icons-vue'
+import { jsonFormat, jsonCompress } from '@/utils/json'
 import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
@@ -29,8 +30,7 @@ watch(indent, () => {
 
 const format = () => {
   try {
-    const parsed = JSON.parse(input.value)
-    output.value = JSON.stringify(parsed, null, indent.value)
+    output.value = jsonFormat(input.value, indent.value)
     isValid.value = true
   } catch {
     isValid.value = false
@@ -40,8 +40,7 @@ const format = () => {
 
 const compress = () => {
   try {
-    const parsed = JSON.parse(input.value)
-    output.value = JSON.stringify(parsed)
+    output.value = jsonCompress(input.value)
     isValid.value = true
   } catch {
     isValid.value = false

@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { DocumentChecked } from '@element-plus/icons-vue'
+import { testRegex as testRegexUtil, highlightMatches } from '@/utils/regex'
 import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
@@ -21,65 +22,13 @@ const error = ref('')
 
 // 生成带高亮的文本HTML
 const highlightedText = computed(() => {
-  if (!pattern.value || !testString.value || error.value) {
-    return escapeHtml(testString.value)
-  }
-
-  try {
-    const flagStr = Object.entries(flags.value)
-      .filter(([_, v]) => v)
-      .map(([k]) => k)
-      .join('')
-    const regex = new RegExp(pattern.value, flagStr)
-
-    // 使用replace配合正则来高亮匹配部分
-    const result = testString.value.replace(regex, (match) => {
-      return `<mark class="highlight">${escapeHtml(match)}</mark>`
-    })
-    return result
-  } catch {
-    return escapeHtml(testString.value)
-  }
+  return highlightMatches(pattern.value, testString.value, flags.value, !!error.value)
 })
 
-// 转义HTML特殊字符
-const escapeHtml = (str: string): string => {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
-
 const testRegex = () => {
-  matches.value = []
-  error.value = ''
-
-  if (!pattern.value || !testString.value) {
-    return
-  }
-
-  try {
-    const flagStr = Object.entries(flags.value)
-      .filter(([_, v]) => v)
-      .map(([k]) => k)
-      .join('')
-    const regex = new RegExp(pattern.value, flagStr)
-
-    if (flags.value.g) {
-      const results = testString.value.match(regex)
-      if (results) {
-        matches.value = results
-      }
-    } else {
-      const match = testString.value.match(regex)
-      if (match) {
-        matches.value = [match[0]]
-      }
-    }
-  } catch (e) {
-    error.value = (e as Error).message
-  }
+  const result = testRegexUtil(pattern.value, testString.value, flags.value)
+  matches.value = result.matches
+  error.value = result.error
 }
 
 watch([pattern, testString, flags], testRegex, { deep: true, immediate: true })

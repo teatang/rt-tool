@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { PictureFilled } from '@element-plus/icons-vue'
+import { htmlFormat, htmlCompress } from '@/utils/html'
 import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
@@ -14,12 +15,7 @@ const isValid = ref(true)
 
 const format = () => {
   try {
-    // Simple HTML formatting
-    let formatted = input.value
-      .replace(/></g, '>\n<')
-      .replace(/^\s+/gm, '')
-      .trim()
-    output.value = formatted
+    output.value = htmlFormat(input.value)
     isValid.value = true
   } catch {
     isValid.value = false
@@ -29,12 +25,7 @@ const format = () => {
 
 const compress = () => {
   try {
-    // HTML compression - remove extra whitespace
-    let compressed = input.value
-      .replace(/>\s+</g, '><')
-      .replace(/\s+/g, ' ')
-      .trim()
-    output.value = compressed
+    output.value = htmlCompress(input.value)
     isValid.value = true
   } catch {
     isValid.value = false

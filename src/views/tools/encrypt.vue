@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { Lock } from '@element-plus/icons-vue'
-import CryptoJS from 'crypto-js'
+import { encrypt as encryptUtil, type EncryptionAlgorithm } from '@/utils/encrypt'
 import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
@@ -11,7 +11,7 @@ const { t } = useI18n()
 // 默认示例
 const input = ref('Hello World!')
 const output = ref('')
-const algorithm = ref('md5')
+const algorithm = ref<EncryptionAlgorithm>('md5')
 const secret = ref('')
 
 const algorithms = [
@@ -28,35 +28,7 @@ const encrypt = () => {
   if (!input.value) return
 
   try {
-    switch (algorithm.value) {
-      case 'md5':
-        output.value = CryptoJS.MD5(input.value).toString()
-        break
-      case 'sha1':
-        output.value = CryptoJS.SHA1(input.value).toString()
-        break
-      case 'sha256':
-        output.value = CryptoJS.SHA256(input.value).toString()
-        break
-      case 'sha512':
-        output.value = CryptoJS.SHA512(input.value).toString()
-        break
-      case 'hmac-md5':
-        output.value = secret.value
-          ? CryptoJS.HmacMD5(input.value, secret.value).toString()
-          : 'Secret key required'
-        break
-      case 'hmac-sha1':
-        output.value = secret.value
-          ? CryptoJS.HmacSHA1(input.value, secret.value).toString()
-          : 'Secret key required'
-        break
-      case 'hmac-sha256':
-        output.value = secret.value
-          ? CryptoJS.HmacSHA256(input.value, secret.value).toString()
-          : 'Secret key required'
-        break
-    }
+    output.value = encryptUtil(input.value, algorithm.value, secret.value)
   } catch {
     output.value = t('messages.error')
   }

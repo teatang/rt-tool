@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { TrendCharts } from '@element-plus/icons-vue'
+import { sqlFormat, sqlCompress } from '@/utils/sql'
 import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
@@ -14,28 +15,7 @@ const isValid = ref(true)
 
 const format = () => {
   try {
-    // Simple SQL formatting
-    let formatted = input.value
-      .replace(/\s+/g, ' ')
-      .replace(/\s*,\s*/g, ', ')
-      .replace(/\s*\(\s*/g, ' (')
-      .replace(/\s*\)\s*/g, ') ')
-      .replace(/\bSELECT\b/gi, '\nSELECT')
-      .replace(/\bFROM\b/gi, '\nFROM')
-      .replace(/\bWHERE\b/gi, '\nWHERE')
-      .replace(/\bAND\b/gi, '\n  AND')
-      .replace(/\bOR\b/gi, '\n  OR')
-      .replace(/\bJOIN\b/gi, '\nJOIN')
-      .replace(/\bLEFT\b/gi, '\nLEFT')
-      .replace(/\bRIGHT\b/gi, '\nRIGHT')
-      .replace(/\bINNER\b/gi, '\nINNER')
-      .replace(/\bOUTER\b/gi, '\nOUTER')
-      .replace(/\bORDER BY\b/gi, '\nORDER BY')
-      .replace(/\bGROUP BY\b/gi, '\nGROUP BY')
-      .replace(/\bHAVING\b/gi, '\nHAVING')
-      .replace(/\bLIMIT\b/gi, '\nLIMIT')
-      .trim()
-    output.value = formatted
+    output.value = sqlFormat(input.value)
     isValid.value = true
   } catch {
     isValid.value = false
@@ -45,15 +25,7 @@ const format = () => {
 
 const compress = () => {
   try {
-    // SQL compression - remove extra whitespace
-    let compressed = input.value
-      .replace(/--.*$/gm, '') // Remove comments
-      .replace(/\s+/g, ' ')
-      .replace(/\s*,\s*/g, ',')
-      .replace(/\s*\(\s*/g, '(')
-      .replace(/\s*\)\s*/g, ')')
-      .trim()
-    output.value = compressed
+    output.value = sqlCompress(input.value)
     isValid.value = true
   } catch {
     isValid.value = false

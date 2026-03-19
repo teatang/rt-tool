@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { Key } from '@element-plus/icons-vue'
-import CryptoJS from 'crypto-js'
+import { base64Encode, base64Decode } from '@/utils/base64'
 import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
@@ -16,7 +16,7 @@ const output = ref('')
 // 编码
 const encode = () => {
   try {
-    output.value = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(input.value))
+    output.value = base64Encode(input.value)
   } catch {
     output.value = t('messages.error')
   }
@@ -25,8 +25,7 @@ const encode = () => {
 // 解码
 const decode = () => {
   try {
-    const decoded = CryptoJS.enc.Base64.parse(input.value)
-    output.value = CryptoJS.enc.Utf8.stringify(decoded)
+    output.value = base64Decode(input.value)
   } catch {
     output.value = t('messages.error')
   }

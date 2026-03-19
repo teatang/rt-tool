@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { Link } from '@element-plus/icons-vue'
+import { urlEncode, urlDecode } from '@/utils/url'
 import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
@@ -13,7 +14,7 @@ const output = ref('')
 
 const encode = () => {
   try {
-    output.value = encodeURIComponent(input.value)
+    output.value = urlEncode(input.value)
   } catch {
     output.value = t('messages.error')
   }
@@ -21,7 +22,7 @@ const encode = () => {
 
 const decode = () => {
   try {
-    output.value = decodeURIComponent(input.value)
+    output.value = urlDecode(input.value)
   } catch {
     output.value = t('messages.error')
   }
