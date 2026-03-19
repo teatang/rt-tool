@@ -1,6 +1,6 @@
 export default {
   app: {
-    title: 'RT 工具',
+    title: '静静工具箱',
     loading: '加载中...'
   },
   nav: {
