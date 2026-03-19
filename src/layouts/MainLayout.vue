@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '../stores/theme'
+import { useLocaleStore } from '../stores/locale'
 
 // 引入 Element Plus 图标 - 每个工具使用独特的图标
 import {
@@ -28,8 +29,9 @@ import {
   Monitor
 } from '@element-plus/icons-vue'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const themeStore = useThemeStore()
+const localeStore = useLocaleStore()
 const route = useRoute()
 
 // 当前选中的菜单 - 使用 ref 并监听路由变化
@@ -88,6 +90,16 @@ const menuItems = computed(() => [
 const changeTheme = (mode: 'light' | 'dark' | 'system') => {
   themeStore.setTheme(mode)
 }
+
+// 切换语言并保存到 localStorage
+const changeLocale = (lang: string) => {
+  localeStore.setLocale(lang)
+}
+
+// 页面加载后初始化主题
+onMounted(() => {
+  themeStore.setTheme(themeStore.themeMode)
+})
 </script>
 
 <template>
@@ -138,14 +150,14 @@ const changeTheme = (mode: 'light' | 'dark' | 'system') => {
           <!-- 语言切换 -->
           <div class="locale-switch">
             <button
-              :class="['locale-btn', { active: locale === 'zh' }]"
-              @click="locale = 'zh'"
+              :class="['locale-btn', { active: localeStore.locale === 'zh' }]"
+              @click="changeLocale('zh')"
             >
               中
             </button>
             <button
-              :class="['locale-btn', { active: locale === 'en' }]"
-              @click="locale = 'en'"
+              :class="['locale-btn', { active: localeStore.locale === 'en' }]"
+              @click="changeLocale('en')"
             >
               EN
             </button>
