@@ -25,9 +25,11 @@
 ### 主题系统
 - 支持浅色/深色模式
 - 支持跟随系统主题
+- 设置自动持久化保存
 
 ### 国际化
 - 支持中文/英文切换
+- 语言设置自动持久化保存
 
 ## 技术栈
 
@@ -39,6 +41,7 @@
 - **国际化**: vue-i18n
 - **测试框架**: Vitest
 - **加密库**: CryptoJS
+- **包管理器**: pnpm
 
 ## 常用命令
 
@@ -60,6 +63,9 @@ pnpm tauri build
 
 # 运行单元测试
 pnpm test
+
+# 运行单元测试 (UI 模式)
+pnpm test:ui
 ```
 
 ## 项目结构
@@ -83,6 +89,8 @@ rt-tool/
 │   │   ├── lib.rs        # Tauri 命令
 │   │   └── main.rs
 │   └── tauri.conf.json
+├── .github/
+│   └── workflows/         # GitHub Actions 构建配置
 ├── package.json
 ├── vite.config.ts
 ├── tsconfig.json
@@ -104,6 +112,14 @@ rt-tool/
 - `uuid.ts` - UUID 生成
 
 每个工具函数都有对应的 `.test.ts` 单元测试文件。
+
+## 下载安装
+
+从 [Releases](https://github.com/teatang/rt-tool/releases) 页面下载对应平台的安装包：
+
+- **macOS**: `.dmg` 安装包
+- **Windows**: `.exe` / `.nsis` 安装包
+- **Linux**: `.AppImage` / `.deb` 安装包
 
 ## 许可证
 

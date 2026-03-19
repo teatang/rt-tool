@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useDark, useToggle } from '@vueuse/core'
 
 // 主题模式类型
