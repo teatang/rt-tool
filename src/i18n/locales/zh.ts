@@ -73,7 +73,16 @@ export default {
     dateToTimestamp: '日期 → 时间戳',
     enterTimestamp: '输入时间戳',
     enterDate: '输入日期 (YYYY-MM-DD HH:mm:ss)',
-    indent: '缩进'
+    indent: '缩进',
+    regex: '正则表达式',
+    replacement: '替换为',
+    original: '原文件名',
+    preview: '预览',
+    selectDir: '选择目录',
+    executeRename: '执行重命名',
+    noFiles: '未匹配到文件',
+    renameSuccess: '重命名成功',
+    renameFailed: '部分文件重命名失败'
   },
   descriptions: {
     base64: 'Base64 编码与解码工具',

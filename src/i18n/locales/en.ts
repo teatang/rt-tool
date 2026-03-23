@@ -73,7 +73,16 @@ export default {
     dateToTimestamp: 'Date → Timestamp',
     enterTimestamp: 'Enter timestamp',
     enterDate: 'Enter date (YYYY-MM-DD HH:mm:ss)',
-    indent: 'Indent'
+    indent: 'Indent',
+    regex: 'Regex',
+    replacement: 'Replacement',
+    original: 'Original Name',
+    preview: 'Preview',
+    selectDir: 'Select Directory',
+    executeRename: 'Execute Rename',
+    noFiles: 'No files matched',
+    renameSuccess: 'Rename successful',
+    renameFailed: 'Some files failed to rename'
   },
   descriptions: {
     base64: 'Base64 encoding and decoding tool',

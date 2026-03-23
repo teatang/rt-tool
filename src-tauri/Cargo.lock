@@ -2917,6 +2917,7 @@ name = "rt-tool"
 version = "0.1.1"
 dependencies = [
  "opener",
+ "regex",
  "serde",
  "serde_json",
  "tauri",
