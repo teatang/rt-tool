@@ -56,12 +56,7 @@ fn rename_file(old_path: String, new_path: String) -> Result<(), String> {
 #[tauri::command]
 fn reveal_in_explorer(path: String) -> Result<(), String> {
     let file_path = Path::new(&path);
-    let dir_path = if file_path.is_file() {
-        file_path.parent().ok_or("Invalid path")?
-    } else {
-        file_path
-    };
-    opener::reveal(dir_path).map_err(|e| e.to_string())
+    opener::reveal(file_path).map_err(|e| e.to_string())
 }
 
 /// 应用入口
