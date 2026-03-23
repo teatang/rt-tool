@@ -52,13 +52,25 @@ fn rename_file(old_path: String, new_path: String) -> Result<(), String> {
     fs::rename(&old_path, &new_path).map_err(|e| e.to_string())
 }
 
+/// 在文件管理器中显示文件所在目录
+#[tauri::command]
+fn reveal_in_explorer(path: String) -> Result<(), String> {
+    let file_path = Path::new(&path);
+    let dir_path = if file_path.is_file() {
+        file_path.parent().ok_or("Invalid path")?
+    } else {
+        file_path
+    };
+    opener::reveal(dir_path).map_err(|e| e.to_string())
+}
+
 /// 应用入口
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![greet, search_files, rename_file])
+        .invoke_handler(tauri::generate_handler![greet, search_files, rename_file, reveal_in_explorer])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

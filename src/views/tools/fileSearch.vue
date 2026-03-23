@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { invoke } from '@tauri-apps/api/core'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
-import { openPath } from '@tauri-apps/plugin-opener'
 import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import PageTitle from '../../components/PageTitle.vue'
@@ -55,9 +54,10 @@ const search = async () => {
 
 const openInExplorer = async (path: string) => {
   try {
-    await openPath(path)
-  } catch {
-    ElMessage.error(t('messages.error'))
+    await invoke('reveal_in_explorer', { path })
+  } catch (e) {
+    console.error('Open directory error:', e)
+    ElMessage.error(String(e))
   }
 }
 

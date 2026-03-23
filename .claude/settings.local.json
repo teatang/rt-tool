@@ -5,7 +5,8 @@
       "Bash(pnpm test:*)",
       "Bash(ls:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(pnpm tauri:*)"
+      "Bash(pnpm tauri:*)",
+      "Bash(lsof:*)"
     ]
   }
 }
