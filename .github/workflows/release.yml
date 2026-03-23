@@ -1,4 +1,4 @@
-name: Build
+name: Release
 
 on:
   push:
@@ -25,10 +25,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
-
-      - name: Install pnpm
-        run: npm install -g pnpm@9
+          cache: 'npm'
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -37,9 +34,15 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install frontend dependencies
-        run: pnpm install
+        run: npm install
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }} # 使用当前的 Tag 名 (如 v1.0.0)
+          releaseName: "RT-Tool ${{ github.ref_name }}"
+          releaseBody: ""
+          releaseDraft: true
+          prerelease: false
