@@ -7,7 +7,9 @@
       "mcp__ide__getDiagnostics",
       "Bash(pnpm tauri:*)",
       "Bash(lsof:*)",
-      "Bash(cargo build:*)"
+      "Bash(cargo build:*)",
+      "Bash(cd /d D:wwwrustrt-toolsrc-tauri)",
+      "Bash(cargo check:*)"
     ]
   }
 }

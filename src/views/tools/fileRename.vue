@@ -107,10 +107,13 @@ const executeRename = async () => {
     const items = fileList.value
       .filter(f => f.old_name !== f.new_name)
       .map(f => {
-        const dirPath = f.path.substring(0, f.path.lastIndexOf('/'))
+        // 兼容 Windows 和 Unix 路径分隔符
+        const normalizedPath = f.path.replace(/\\/g, '/')
+        const lastSlash = Math.max(normalizedPath.lastIndexOf('/'), normalizedPath.lastIndexOf('\\'))
+        const dirPath = f.path.substring(0, lastSlash)
         return {
           old_path: f.path,
-          new_path: `${dirPath}/${f.new_name}`
+          new_path: `${dirPath}\\${f.new_name}`
         }
       })
 

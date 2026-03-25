@@ -1,6 +1,30 @@
 use std::fs;
 use std::path::Path;
+use std::io;
 use regex::Regex;
+
+/// 跨设备重命名：先复制再删除源文件（带验证）
+fn rename_cross_device(from: &Path, to: &Path) -> io::Result<()> {
+    // 获取源文件大小
+    let from_meta = fs::metadata(from)?;
+    let from_size = from_meta.len();
+
+    // 复制文件
+    fs::copy(from, to)?;
+
+    // 验证目标文件大小匹配
+    let to_meta = fs::metadata(to)?;
+    if to_meta.len() != from_size {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "Copy verification failed: file size mismatch",
+        ));
+    }
+
+    // 验证通过后再删除源文件
+    fs::remove_file(from)?;
+    Ok(())
+}
 
 /// 打招呼命令
 #[tauri::command]
@@ -106,7 +130,17 @@ fn batch_rename(items: Vec<RenameItem>) -> Result<Vec<String>, String> {
         if item.old_path != item.new_path {
             match fs::rename(&item.old_path, &item.new_path) {
                 Ok(_) => {}
-                Err(e) => errors.push(format!("{}: {}", item.old_path, e))
+                Err(e) => {
+                    // Windows 跨驱动器移动文件时，rename 返回 EXDEV 错误
+                    // 使用复制+删除方式处理
+                    if e.kind() == io::ErrorKind::CrossesDevices {
+                        if let Err(e2) = rename_cross_device(Path::new(&item.old_path), Path::new(&item.new_path)) {
+                            errors.push(format!("{}: {}", item.old_path, e2));
+                        }
+                    } else {
+                        errors.push(format!("{}: {}", item.old_path, e));
+                    }
+                }
             }
         }
     }
@@ -128,7 +162,19 @@ struct RenameItem {
 /// 重命名文件命令
 #[tauri::command]
 fn rename_file(old_path: String, new_path: String) -> Result<(), String> {
-    fs::rename(&old_path, &new_path).map_err(|e| e.to_string())
+    match fs::rename(&old_path, &new_path) {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            // Windows 跨驱动器移动文件时，rename 返回 EXDEV 错误
+            // 使用复制+删除方式处理
+            if e.kind() == io::ErrorKind::CrossesDevices {
+                rename_cross_device(Path::new(&old_path), Path::new(&new_path))
+                    .map_err(|e2| e2.to_string())
+            } else {
+                Err(e.to_string())
+            }
+        }
+    }
 }
 
 /// 在文件管理器中显示文件所在目录
