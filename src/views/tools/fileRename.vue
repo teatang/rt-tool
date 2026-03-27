@@ -107,26 +107,21 @@ const executeRename = async () => {
     const items = fileList.value
       .filter(f => f.old_name !== f.new_name)
       .map(f => {
-        // 兼容 Windows 和 Unix 路径分隔符
+        // 兼容 Windows 和 Unix 路径分隔符，统一使用正斜杠
         const normalizedPath = f.path.replace(/\\/g, '/')
-        const lastSlash = Math.max(normalizedPath.lastIndexOf('/'), normalizedPath.lastIndexOf('\\'))
-        const dirPath = f.path.substring(0, lastSlash)
+        const lastSlash = normalizedPath.lastIndexOf('/')
+        const dirPath = normalizedPath.substring(0, lastSlash)
         return {
           old_path: f.path,
-          new_path: `${dirPath}\\${f.new_name}`
+          new_path: `${dirPath}/${f.new_name}`
         }
       })
 
-    const errors = await invoke('batch_rename', { items })
-
-    if (errors && (errors as string[]).length > 0) {
-      ElMessage.error(`${t('labels.renameFailed')}: ${(errors as string[]).join(', ')}`)
-    } else {
-      ElMessage.success(t('labels.renameSuccess'))
-      await loadFiles()
-    }
+    await invoke('batch_rename', { items })
+    ElMessage.success(t('labels.renameSuccess'))
+    await loadFiles()
   } catch (e) {
-    ElMessage.error(String(e))
+    ElMessage.error(`${t('labels.renameFailed')}: ${e}`)
   } finally {
     renaming.value = false
   }

@@ -41,8 +41,34 @@ export function sqlCompress(input: string): string {
  * 检查是否为有效的 SQL（简单检查）
  */
 export function isValidSql(input: string): boolean {
-  // 简单检查：是否包含 SQL 关键字
-  const keywords = ['SELECT', 'FROM', 'WHERE', 'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'DROP', 'ALTER']
-  const upperInput = input.toUpperCase()
-  return keywords.some(keyword => upperInput.includes(keyword)) || input.trim().length === 0
+  // 空内容无效
+  if (!input || input.trim().length === 0) {
+    return false
+  }
+
+  // 检查是否包含基本 SQL 关键字（需要与词边界匹配）
+  const sqlPatterns = [
+    /\bSELECT\b/i,
+    /\bFROM\b/i,
+    /\bWHERE\b/i,
+    /\bINSERT\b/i,
+    /\bUPDATE\b/i,
+    /\bDELETE\b/i,
+    /\bCREATE\b/i,
+    /\bDROP\b/i,
+    /\bALTER\b/i,
+    /\bTABLE\b/i,
+    /\bINDEX\b/i,
+    /\bJOIN\b/i,
+    /\bLEFT\b/i,
+    /\bRIGHT\b/i,
+    /\bINNER\b/i,
+    /\bOUTER\b/i,
+    /\bORDER\s+BY\b/i,
+    /\bGROUP\s+BY\b/i,
+    /\bHAVING\b/i,
+    /\bLIMIT\b/i
+  ]
+
+  return sqlPatterns.some(pattern => pattern.test(input))
 }

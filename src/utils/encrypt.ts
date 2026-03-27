@@ -25,17 +25,17 @@ export function encrypt(input: string, algorithm: EncryptionAlgorithm, secret: s
       return CryptoJS.SHA512(input).toString()
     case 'hmac-md5':
       if (!secret) {
-        return 'Secret key required'
+        throw new Error('Secret key required for HMAC-MD5')
       }
       return CryptoJS.HmacMD5(input, secret).toString()
     case 'hmac-sha1':
       if (!secret) {
-        return 'Secret key required'
+        throw new Error('Secret key required for HMAC-SHA1')
       }
       return CryptoJS.HmacSHA1(input, secret).toString()
     case 'hmac-sha256':
       if (!secret) {
-        return 'Secret key required'
+        throw new Error('Secret key required for HMAC-SHA256')
       }
       return CryptoJS.HmacSHA256(input, secret).toString()
     default:

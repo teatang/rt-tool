@@ -27,19 +27,13 @@ const renderMermaid = async () => {
     preview.value.innerHTML = ''
     const { svg } = await mermaid.default.render('mermaid-diagram', code.value)
     preview.value.innerHTML = svg
-  } catch {
-    // Mermaid not loaded yet
+  } catch (e) {
+    console.error('Mermaid render error:', e)
   }
 }
 
 onMounted(() => {
-  // Load mermaid dynamically
-  const script = document.createElement('script')
-  script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js'
-  script.onload = () => {
-    renderMermaid()
-  }
-  document.head.appendChild(script)
+  renderMermaid()
 })
 
 const copyCode = async () => {

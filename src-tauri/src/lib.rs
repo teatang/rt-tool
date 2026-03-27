@@ -36,7 +36,16 @@ fn greet(name: &str) -> String {
 /// 在指定目录中递归搜索包含关键词的文件
 #[tauri::command]
 fn search_files(path: String, keyword: String) -> Result<Vec<String>, String> {
+    // 输入验证
+    if path.trim().is_empty() {
+        return Err("Path cannot be empty".to_string());
+    }
+    if keyword.trim().is_empty() {
+        return Err("Keyword cannot be empty".to_string());
+    }
+
     let mut results = Vec::new();
+    let max_results = 10000;
     let path = Path::new(&path);
 
     if !path.exists() {
@@ -44,10 +53,22 @@ fn search_files(path: String, keyword: String) -> Result<Vec<String>, String> {
     }
 
     // 递归搜索函数
-    fn search_recursive(dir: &Path, keyword: &str, results: &mut Vec<String>) {
+    fn search_recursive(dir: &Path, keyword: &str, results: &mut Vec<String>, max_results: usize) {
+        if results.len() >= max_results {
+            return;
+        }
         if let Ok(entries) = fs::read_dir(dir) {
             for entry in entries.flatten() {
+                if results.len() >= max_results {
+                    return;
+                }
                 let path = entry.path();
+
+                // 跳过符号链接，避免无限递归
+                if path.is_symlink() {
+                    continue;
+                }
+
                 let file_name = path.file_name()
                     .and_then(|n| n.to_str())
                     .unwrap_or("");
@@ -59,21 +80,29 @@ fn search_files(path: String, keyword: String) -> Result<Vec<String>, String> {
                     }
                 }
 
-                // 如果是目录，递归搜索
+                // 如果是目录（非符号链接），递归搜索
                 if path.is_dir() {
-                    search_recursive(&path, keyword, results);
+                    search_recursive(&path, keyword, results, max_results);
                 }
             }
         }
     }
 
-    search_recursive(path, &keyword, &mut results);
+    search_recursive(path, &keyword, &mut results, max_results);
     Ok(results)
 }
 
 /// 列出目录下匹配正则的文件（非递归）
 #[tauri::command]
 fn list_dir_files(path: String, pattern: String) -> Result<Vec<FileItem>, String> {
+    // 输入验证
+    if path.trim().is_empty() {
+        return Err("Path cannot be empty".to_string());
+    }
+    if pattern.trim().is_empty() {
+        return Err("Pattern cannot be empty".to_string());
+    }
+
     let dir_path = Path::new(&path);
 
     if !dir_path.exists() {
@@ -123,7 +152,7 @@ struct FileItem {
 
 /// 批量重命名文件
 #[tauri::command]
-fn batch_rename(items: Vec<RenameItem>) -> Result<Vec<String>, String> {
+fn batch_rename(items: Vec<RenameItem>) -> Result<(), String> {
     let mut errors = Vec::new();
 
     for item in items {
@@ -146,9 +175,9 @@ fn batch_rename(items: Vec<RenameItem>) -> Result<Vec<String>, String> {
     }
 
     if errors.is_empty() {
-        Ok(vec![])
+        Ok(())
     } else {
-        Ok(errors)
+        Err(errors.join("; "))
     }
 }
 
