@@ -7,7 +7,8 @@ export default {
     home: 'Home',
     string: 'String Tools',
     file: 'File Tools',
-    other: 'Other Tools'
+    other: 'Other Tools',
+    games: 'Mini Games'
   },
   theme: {
     light: 'Light',
@@ -26,7 +27,8 @@ export default {
     mermaid: 'Mermaid',
     timestamp: 'Timestamp',
     uuid: 'UUID',
-    encrypt: 'Encrypt'
+    encrypt: 'Encrypt',
+    tetris: 'Tetris'
   },
   actions: {
     encode: 'Encode',
@@ -96,6 +98,25 @@ export default {
     mermaid: 'Mermaid diagram editor',
     timestamp: 'Timestamp conversion tool',
     uuid: 'UUID generator',
-    encrypt: 'MD5/SHA hash encryption tool'
+    encrypt: 'MD5/SHA hash encryption tool',
+    tetris: 'Classic Tetris game'
+  },
+  tetris: {
+    score: 'Score',
+    level: 'Level',
+    lines: 'Lines',
+    next: 'Next',
+    controls: 'Controls',
+    move: 'Move',
+    rotate: 'Rotate',
+    softDrop: 'Soft Drop',
+    hardDrop: 'Hard Drop',
+    pause: 'Pause',
+    start: 'Start Game',
+    restart: 'Restart',
+    gameOver: 'Game Over',
+    paused: 'Paused',
+    pressStart: 'Press start to begin',
+    pressP: 'Press P to resume'
   }
 }

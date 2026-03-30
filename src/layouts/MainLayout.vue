@@ -26,7 +26,9 @@ import {
   Film,
   Sunny,
   Moon,
-  Monitor
+  Monitor,
+  Grid,
+  Operation
 } from '@element-plus/icons-vue'
 
 const { t } = useI18n()
@@ -82,6 +84,14 @@ const menuItems = computed(() => [
       { name: 'timestamp', label: t('tools.timestamp'), icon: Clock },    // 时间
       { name: 'uuid', label: t('tools.uuid'), icon: Stamp },              // 唯一标识
       { name: 'encrypt', label: t('tools.encrypt'), icon: Lock }           // 锁定/加密
+    ]
+  },
+  {
+    name: 'games',
+    label: t('nav.games'),
+    icon: Operation,
+    children: [
+      { name: 'tetris', label: t('tools.tetris'), icon: Grid }             // 俄罗斯方块
     ]
   }
 ])

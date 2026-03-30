@@ -68,6 +68,12 @@ const routes = [
     path: '/encrypt',
     name: 'encrypt',
     component: () => import('../views/tools/encrypt.vue')
+  },
+  // 小游戏
+  {
+    path: '/tetris',
+    name: 'tetris',
+    component: () => import('../views/tools/tetris.vue')
   }
 ]
 

@@ -7,7 +7,8 @@ export default {
     home: '首页',
     string: '字符串工具',
     file: '文件工具',
-    other: '其他工具'
+    other: '其他工具',
+    games: '小游戏'
   },
   theme: {
     light: '浅色',
@@ -26,7 +27,8 @@ export default {
     mermaid: 'Mermaid',
     timestamp: '时间戳',
     uuid: 'UUID',
-    encrypt: '加密'
+    encrypt: '加密',
+    tetris: '俄罗斯方块'
   },
   actions: {
     encode: '编码',
@@ -96,6 +98,25 @@ export default {
     mermaid: 'Mermaid 图表编辑器',
     timestamp: '时间戳转换工具',
     uuid: 'UUID 生成器',
-    encrypt: 'MD5/SHA 哈希加密工具'
+    encrypt: 'MD5/SHA 哈希加密工具',
+    tetris: '经典俄罗斯方块游戏'
+  },
+  tetris: {
+    score: '得分',
+    level: '等级',
+    lines: '消除行数',
+    next: '下一个',
+    controls: '操作说明',
+    move: '左右移动',
+    rotate: '旋转',
+    softDrop: '软降',
+    hardDrop: '硬降',
+    pause: '暂停',
+    start: '开始游戏',
+    restart: '重新开始',
+    gameOver: '游戏结束',
+    paused: '游戏暂停',
+    pressStart: '按开始按钮开始游戏',
+    pressP: '按 P 键继续'
   }
 }
