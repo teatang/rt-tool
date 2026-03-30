@@ -103,6 +103,7 @@ export default {
   },
   tetris: {
     score: '得分',
+    highScore: '最高分',
     level: '等级',
     lines: '消除行数',
     next: '下一个',

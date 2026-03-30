@@ -10,15 +10,15 @@ export type TetrominoType = 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L'
 // 方块形状定义 (每个旋转状态)
 export type TetrominoShapes = number[][][]
 
-// 方块颜色
+// 方块颜色 - 精致配色
 export const TETROMINO_COLORS: Record<TetrominoType, string> = {
-  I: '#00f0f0',
-  O: '#f0f000',
-  T: '#a000f0',
-  S: '#00f000',
-  Z: '#f00000',
-  J: '#0000f0',
-  L: '#f0a000'
+  I: '#00d4ff',  // 青色 - 清爽电光蓝
+  O: '#ffd700',  // 金色 - 高贵黄金
+  T: '#da70d6',  // 兰花粉 - 优雅紫红
+  S: '#7fff00',  // 黄绿色 - 清新酸橙
+  Z: '#ff6b6b',  // 珊瑚红 - 活力红
+  J: '#4169e1',  // 皇家蓝 - 沉稳靛蓝
+  L: '#ff9f43'   // 暖橙色 - 活力橙
 }
 
 // 方块形状定义 - 每个数组代表一个旋转状态
@@ -80,7 +80,14 @@ export interface GameState {
   nextPiece: TetrominoType | null
   isGameOver: boolean
   isPaused: boolean
-  justLocked: boolean  // 方块刚刚锁定
+  justLocked: number  // 方块刚刚锁定的时间戳/计数器
+}
+
+// 获取新的锁定标记 - 使用递增计数器确保唯一性
+let lockCounter = 0
+const newLockMarker = (): number => {
+  lockCounter = (lockCounter + 1) % 1000000
+  return lockCounter
 }
 
 // 初始化空游戏板
@@ -104,7 +111,7 @@ export function createInitialState(): GameState {
     nextPiece: null,
     isGameOver: false,
     isPaused: false,
-    justLocked: false
+    justLocked: 0
   }
 }
 
@@ -308,8 +315,7 @@ export function spawnPiece(state: GameState): GameState {
       currentY: startY,
       currentRotation: 0,
       nextPiece,
-      isGameOver: true,
-      justLocked: false
+      isGameOver: true
     }
   }
 
@@ -319,8 +325,7 @@ export function spawnPiece(state: GameState): GameState {
     currentX: startX,
     currentY: startY,
     currentRotation: 0,
-    nextPiece,
-    justLocked: false
+    nextPiece
   }
 }
 
@@ -353,7 +358,7 @@ export function lockAndClearLines(state: GameState): GameState {
     lines: newLines,
     level: newLevel,
     currentPiece: null,
-    justLocked: true
+    justLocked: newLockMarker()
   }
 }
 

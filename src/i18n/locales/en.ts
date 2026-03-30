@@ -103,6 +103,7 @@ export default {
   },
   tetris: {
     score: 'Score',
+    highScore: 'High Score',
     level: 'Level',
     lines: 'Lines',
     next: 'Next',

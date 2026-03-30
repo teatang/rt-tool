@@ -17,9 +17,11 @@ import {
   getGhostY,
   GameState
 } from '@/utils/tetris'
+import { useTetrisStore } from '@/stores/tetris'
 import PageTitle from '../../components/PageTitle.vue'
 
 const { t } = useI18n()
+const tetrisStore = useTetrisStore()
 
 // 游戏状态
 const gameState = ref<GameState>(startNewGame())
@@ -80,11 +82,6 @@ const tick = () => {
 
     gameState.value = gameTick(gameState.value)
 
-    // 检测方块落地 (通过 justLocked 标志)
-    if (gameState.value.justLocked) {
-      triggerLandingEffect()
-    }
-
     // 检测分数变化
     if (gameState.value.score > oldScore) {
       const scoreGain = gameState.value.score - oldScore
@@ -98,12 +95,27 @@ const tick = () => {
   }
 }
 
+// 监听 justLocked 变化来触发落地特效
+watch(() => gameState.value.justLocked, (newVal, oldVal) => {
+  if (newVal && newVal !== oldVal) {
+    triggerLandingEffect()
+  }
+})
+
+// 监听游戏结束，更新最高分
+watch(() => gameState.value.isGameOver, (isGameOver, wasGameOver) => {
+  if (isGameOver && !wasGameOver) {
+    tetrisStore.updateHighScore(gameState.value.score)
+  }
+})
+
 // 触发落地特效
 const triggerLandingEffect = () => {
+  isLanding.value = false
   isLanding.value = true
   setTimeout(() => {
     isLanding.value = false
-  }, 100)
+  }, 400)
 }
 
 // 触发得分弹出
@@ -266,9 +278,8 @@ onUnmounted(() => {
     />
 
     <div class="game-wrapper">
-      <!-- 游戏区域 -->
+      <!-- 第一列：游戏区域 -->
       <div class="game-area">
-        <!-- 游戏板 -->
         <div
           class="game-board"
           :class="{
@@ -340,8 +351,8 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- 侧边信息栏 -->
-      <div class="side-panel">
+      <!-- 第二列：下一个方块 + 操作说明 -->
+      <div class="side-panel column-2">
         <!-- 下一个方块 -->
         <div class="info-card next-piece">
           <div class="card-title">{{ t('tetris.next') }}</div>
@@ -361,24 +372,6 @@ onUnmounted(() => {
               />
             </div>
           </div>
-        </div>
-
-        <!-- 分数 -->
-        <div class="info-card">
-          <div class="card-title">{{ t('tetris.score') }}</div>
-          <div class="stat-value">{{ gameState.score }}</div>
-        </div>
-
-        <!-- 等级 -->
-        <div class="info-card">
-          <div class="card-title">{{ t('tetris.level') }}</div>
-          <div class="stat-value">{{ gameState.level }}</div>
-        </div>
-
-        <!-- 消除行数 -->
-        <div class="info-card">
-          <div class="card-title">{{ t('tetris.lines') }}</div>
-          <div class="stat-value">{{ gameState.lines }}</div>
         </div>
 
         <!-- 操作说明 -->
@@ -408,24 +401,60 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
+
+      <!-- 第三列：分数信息 -->
+      <div class="side-panel column-3">
+        <!-- 分数 -->
+        <div class="info-card">
+          <div class="card-title">{{ t('tetris.score') }}</div>
+          <div class="stat-value">{{ gameState.score }}</div>
+        </div>
+
+        <!-- 最高分 -->
+        <div class="info-card high-score">
+          <div class="card-title">{{ t('tetris.highScore') }}</div>
+          <div class="stat-value high-score-value">{{ tetrisStore.highScore }}</div>
+        </div>
+
+        <!-- 等级 -->
+        <div class="info-card">
+          <div class="card-title">{{ t('tetris.level') }}</div>
+          <div class="stat-value">{{ gameState.level }}</div>
+        </div>
+
+        <!-- 消除行数 -->
+        <div class="info-card">
+          <div class="card-title">{{ t('tetris.lines') }}</div>
+          <div class="stat-value">{{ gameState.lines }}</div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .tool-container {
-  max-width: 900px;
+  max-width: 1000px;
 }
 
 .game-wrapper {
   display: flex;
   gap: 24px;
   justify-content: center;
+  align-items: flex-start;
 }
 
 .game-area {
   position: relative;
   flex-shrink: 0;
+}
+
+.side-panel.column-2,
+.side-panel.column-3 {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 160px;
 }
 
 .game-board {
@@ -442,15 +471,24 @@ onUnmounted(() => {
   opacity: 0.6;
 }
 
-/* 落地特效 - 轻微震动 */
+/* 落地特效 - 优雅光晕 */
 .game-board.landing {
-  animation: land-shake 0.1s ease-out;
+  animation: land-glow 0.4s ease-out forwards !important;
 }
 
-@keyframes land-shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-2px); }
-  75% { transform: translateX(2px); }
+@keyframes land-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(230, 162, 60, 0);
+    filter: brightness(1);
+  }
+  20% {
+    box-shadow: 0 0 30px 10px rgba(230, 162, 60, 0.7);
+    filter: brightness(1.15);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(230, 162, 60, 0);
+    filter: brightness(1);
+  }
 }
 
 /* 升级特效 - 发光脉冲 */
@@ -540,13 +578,15 @@ onUnmounted(() => {
 }
 
 .board-cell.ghost {
-  border: 2px dashed rgba(128, 128, 128, 0.5);
-  border-radius: 2px;
+  border: 2px dashed rgba(180, 180, 180, 0.6);
+  border-radius: 3px;
+  background: rgba(180, 180, 180, 0.15) !important;
 }
 
 /* 深色模式下幽灵方块样式 */
 .dark .board-cell.ghost {
-  border-color: rgba(200, 200, 200, 0.4);
+  border-color: rgba(220, 220, 220, 0.5);
+  background: rgba(220, 220, 220, 0.1) !important;
 }
 
 /* 遮罩层 */
@@ -627,6 +667,31 @@ onUnmounted(() => {
   font-weight: 700;
   color: var(--el-text-color-primary);
   text-align: center;
+}
+
+/* 最高分样式 */
+.high-score {
+  background: linear-gradient(135deg, rgba(230, 162, 60, 0.1), rgba(255, 215, 0, 0.1)) !important;
+  border-color: rgba(230, 162, 60, 0.3) !important;
+}
+
+.high-score-value {
+  color: #e6a23c;
+  background: linear-gradient(90deg, #e6a23c, #ffd700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark .high-score {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(230, 162, 60, 0.1)) !important;
+}
+
+.dark .high-score-value {
+  background: linear-gradient(90deg, #ffd700, #ff9f43);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* 下一个方块预览 */

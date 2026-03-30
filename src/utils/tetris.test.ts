@@ -103,9 +103,9 @@ describe('tetris utils', () => {
 
   describe('getTetrominoColor', () => {
     it('should return correct colors', () => {
-      expect(getTetrominoColor('I')).toBe('#00f0f0')
-      expect(getTetrominoColor('O')).toBe('#f0f000')
-      expect(getTetrominoColor('T')).toBe('#a000f0')
+      expect(getTetrominoColor('I')).toBe('#00d4ff')
+      expect(getTetrominoColor('O')).toBe('#ffd700')
+      expect(getTetrominoColor('T')).toBe('#da70d6')
     })
   })
 
