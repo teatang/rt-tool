@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Grid } from '@element-plus/icons-vue'
 import {
@@ -158,9 +158,9 @@ const restartGame = () => {
   startGame()
 }
 
-// 监听等级变化,更新速度
+// 监听等级变化,更新速度（仅在游戏进行中）
 watch(() => gameState.value.level, () => {
-  if (gameInterval.value) {
+  if (gameInterval.value && !gameState.value.isPaused && !gameState.value.isGameOver) {
     clearInterval(gameInterval.value)
     gameInterval.value = window.setInterval(tick, getSpeed.value)
   }
@@ -260,10 +260,11 @@ onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
 })
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeyDown)
   if (gameInterval.value) {
     clearInterval(gameInterval.value)
+    gameInterval.value = null
   }
 })
 </script>

@@ -46,15 +46,20 @@ fn search_files(path: String, keyword: String) -> Result<Vec<String>, String> {
 
     let mut results = Vec::new();
     let max_results = 10000;
-    let path = Path::new(&path);
+    let max_depth = 50; // 最大递归深度，防止深层目录遍历
+    let base_path = Path::new(&path);
 
-    if !path.exists() {
+    // 路径规范化检查：防止路径遍历攻击
+    let canonical_path = base_path.canonicalize()
+        .map_err(|_| "Path cannot be resolved (invalid path)")?;
+
+    if !canonical_path.exists() {
         return Err("Path does not exist".to_string());
     }
 
     // 递归搜索函数
-    fn search_recursive(dir: &Path, keyword: &str, results: &mut Vec<String>, max_results: usize) {
-        if results.len() >= max_results {
+    fn search_recursive(dir: &Path, keyword: &str, results: &mut Vec<String>, max_results: usize, current_depth: usize, max_depth: usize) {
+        if current_depth >= max_depth || results.len() >= max_results {
             return;
         }
         if let Ok(entries) = fs::read_dir(dir) {
@@ -62,33 +67,33 @@ fn search_files(path: String, keyword: String) -> Result<Vec<String>, String> {
                 if results.len() >= max_results {
                     return;
                 }
-                let path = entry.path();
+                let entry_path = entry.path();
 
                 // 跳过符号链接，避免无限递归
-                if path.is_symlink() {
+                if entry_path.is_symlink() {
                     continue;
                 }
 
-                let file_name = path.file_name()
+                let file_name = entry_path.file_name()
                     .and_then(|n| n.to_str())
                     .unwrap_or("");
 
                 // 不区分大小写匹配
                 if file_name.to_lowercase().contains(&keyword.to_lowercase()) {
-                    if let Some(path_str) = path.to_str() {
+                    if let Some(path_str) = entry_path.to_str() {
                         results.push(path_str.to_string());
                     }
                 }
 
                 // 如果是目录（非符号链接），递归搜索
-                if path.is_dir() {
-                    search_recursive(&path, keyword, results, max_results);
+                if entry_path.is_dir() {
+                    search_recursive(&entry_path, keyword, results, max_results, current_depth + 1, max_depth);
                 }
             }
         }
     }
 
-    search_recursive(path, &keyword, &mut results, max_results);
+    search_recursive(&canonical_path, &keyword, &mut results, max_results, 0, max_depth);
     Ok(results)
 }
 
@@ -153,18 +158,50 @@ struct FileItem {
 /// 批量重命名文件
 #[tauri::command]
 fn batch_rename(items: Vec<RenameItem>) -> Result<(), String> {
+    // 第一步：预验证所有路径，确保所有源文件存在且目标路径有效
+    for item in &items {
+        if item.old_path.trim().is_empty() {
+            return Err("Source path cannot be empty".to_string());
+        }
+        if item.new_path.trim().is_empty() {
+            return Err("Target path cannot be empty".to_string());
+        }
+        let old_path = Path::new(&item.old_path);
+        if !old_path.exists() {
+            return Err(format!("Source file does not exist: {}", item.old_path));
+        }
+        if !old_path.is_file() {
+            return Err(format!("Source is not a file: {}", item.old_path));
+        }
+        // 检查目标目录是否存在
+        if let Some(parent) = Path::new(&item.new_path).parent() {
+            if !parent.exists() {
+                return Err(format!("Target directory does not exist: {}", parent.display()));
+            }
+        }
+    }
+
+    // 第二步：执行重命名操作
     let mut errors = Vec::new();
+    let mut renamed_files: Vec<(String, String)> = Vec::new(); // 用于回滚记录
 
     for item in items {
         if item.old_path != item.new_path {
             match fs::rename(&item.old_path, &item.new_path) {
-                Ok(_) => {}
+                Ok(_) => {
+                    renamed_files.push((item.new_path.clone(), item.old_path.clone()));
+                }
                 Err(e) => {
                     // Windows 跨驱动器移动文件时，rename 返回 EXDEV 错误
                     // 使用复制+删除方式处理
                     if e.kind() == io::ErrorKind::CrossesDevices {
-                        if let Err(e2) = rename_cross_device(Path::new(&item.old_path), Path::new(&item.new_path)) {
-                            errors.push(format!("{}: {}", item.old_path, e2));
+                        match rename_cross_device(Path::new(&item.old_path), Path::new(&item.new_path)) {
+                            Ok(_) => {
+                                renamed_files.push((item.new_path.clone(), item.old_path.clone()));
+                            }
+                            Err(e2) => {
+                                errors.push(format!("{}: {}", item.old_path, e2));
+                            }
                         }
                     } else {
                         errors.push(format!("{}: {}", item.old_path, e));
@@ -174,11 +211,16 @@ fn batch_rename(items: Vec<RenameItem>) -> Result<(), String> {
         }
     }
 
-    if errors.is_empty() {
-        Ok(())
-    } else {
-        Err(errors.join("; "))
+    // 如果有错误，尝试回滚已成功的重命名
+    if !errors.is_empty() {
+        // 回滚操作（忽略回滚错误，仅记录）
+        for (new_path, old_path) in renamed_files {
+            let _ = fs::rename(&new_path, &old_path);
+        }
+        return Err(errors.join("; "));
     }
+
+    Ok(())
 }
 
 /// 重命名项结构

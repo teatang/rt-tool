@@ -28,7 +28,8 @@ const renderMermaid = async () => {
     const { svg } = await mermaid.default.render('mermaid-diagram', code.value)
     preview.value.innerHTML = svg
   } catch (e) {
-    console.error('Mermaid render error:', e)
+    const errorMessage = e instanceof Error ? e.message : 'Invalid Mermaid syntax'
+    ElMessage.error(`${t('messages.renderFailed')}: ${errorMessage}`)
   }
 }
 

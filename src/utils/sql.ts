@@ -41,9 +41,9 @@ export function sqlCompress(input: string): string {
  * 检查是否为有效的 SQL（简单检查）
  */
 export function isValidSql(input: string): boolean {
-  // 空内容无效
+  // 空内容视为有效（空 SQL 是有效的）
   if (!input || input.trim().length === 0) {
-    return false
+    return true
   }
 
   // 检查是否包含基本 SQL 关键字（需要与词边界匹配）

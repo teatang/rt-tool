@@ -63,8 +63,10 @@ export function highlightMatches(pattern: string, testString: string, flags: Reg
     const flagStr = getFlagString(flags)
     const regex = new RegExp(pattern, flagStr)
 
-    const result = testString.replace(regex, (match) => {
-      return `<mark class="highlight">${escapeHtml(match)}</mark>`
+    // 先对整个字符串进行 HTML 转义，再进行高亮替换
+    const escapedText = escapeHtml(testString)
+    const result = escapedText.replace(regex, (match) => {
+      return `<mark class="highlight">${match}</mark>`
     })
     return result
   } catch {

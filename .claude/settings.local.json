@@ -10,7 +10,8 @@
       "Bash(cargo build:*)",
       "Bash(cd /d D:wwwrustrt-toolsrc-tauri)",
       "Bash(cargo check:*)",
-      "Bash(pnpm vitest:*)"
+      "Bash(pnpm vitest:*)",
+      "Bash(pnpm install:*)"
     ]
   }
 }

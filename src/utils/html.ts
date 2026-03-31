@@ -22,9 +22,9 @@ export function htmlCompress(input: string): string {
  * 检查是否为有效的 HTML（简单检查）
  */
 export function isValidHtml(input: string): boolean {
-  // 空内容无效
+  // 空内容视为有效（空 HTML 是有效的）
   if (!input || input.trim().length === 0) {
-    return false
+    return true
   }
 
   // 检查是否有配对的标签

@@ -83,11 +83,9 @@ export interface GameState {
   justLocked: number  // 方块刚刚锁定的时间戳/计数器
 }
 
-// 获取新的锁定标记 - 使用递增计数器确保唯一性
-let lockCounter = 0
+// 获取新的锁定标记 - 使用时间戳确保唯一性
 const newLockMarker = (): number => {
-  lockCounter = (lockCounter + 1) % 1000000
-  return lockCounter
+  return Date.now()
 }
 
 // 初始化空游戏板

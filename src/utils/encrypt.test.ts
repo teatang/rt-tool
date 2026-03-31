@@ -26,8 +26,7 @@ describe('encrypt utils', () => {
     })
 
     it('should require secret for HMAC algorithms', () => {
-      const result = encrypt('Hello World', 'hmac-md5', '')
-      expect(result).toBe('Secret key required')
+      expect(() => encrypt('Hello World', 'hmac-md5', '')).toThrow('Secret key required for HMAC-MD5')
     })
 
     it('should encrypt with HMAC-MD5', () => {

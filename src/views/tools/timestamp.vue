@@ -34,6 +34,8 @@ onUnmounted(() => {
 
 const convertToDate = () => {
   if (!timestamp.value) return ''
+  // 验证是否为有效数字
+  if (isNaN(Number(timestamp.value))) return t('messages.error')
   return timestampToDate(timestamp.value, locale.value)
 }
 
