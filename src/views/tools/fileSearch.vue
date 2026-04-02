@@ -77,7 +77,7 @@ const copyPath = async (path: string) => {
       :icon="Search"
       :title="t('tools.fileSearch')"
       description="fileSearch"
-      color="#f56c6c"
+      color="#ff5722"
     />
     <div class="search-form">
       <div class="path-input mb-4">

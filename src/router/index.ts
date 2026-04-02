@@ -4,7 +4,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
   {
     path: '/',
-    redirect: '/base64'
+    name: 'home',
+    component: () => import('../views/Welcome.vue')
   },
   // 字符串工具
   {

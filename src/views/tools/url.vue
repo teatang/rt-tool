@@ -49,7 +49,7 @@ const clear = () => {
       :icon="Link"
       :title="t('tools.url')"
       description="url"
-      color="#67c23a"
+      color="#2196f3"
     />
     <el-row :gutter="20">
       <!-- 左侧：输入 -->

@@ -55,7 +55,7 @@ const clear = () => {
       :icon="TrendCharts"
       :title="t('tools.sql')"
       description="sql"
-      color="#67c23a"
+      color="#9c27b0"
     />
     <el-row :gutter="20">
       <!-- 左侧：输入 -->

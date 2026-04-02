@@ -28,7 +28,8 @@ import {
   Moon,
   Monitor,
   Grid,
-  Operation
+  Operation,
+  HomeFilled
 } from '@element-plus/icons-vue'
 
 const { t } = useI18n()
@@ -39,11 +40,18 @@ const route = useRoute()
 // 当前选中的菜单 - 使用 ref 并监听路由变化
 const activeMenu = ref('base64')
 
+// 根据路由路径获取活跃菜单
+const getActiveMenu = (path: string): string => {
+  if (path === '/') return 'home'
+  if (path.startsWith('/')) return path.slice(1)
+  return path || 'base64'
+}
+
 // 监听路由变化更新菜单选中状态
 watch(
   () => route.path,
   (path) => {
-    activeMenu.value = path.startsWith('/') ? path.slice(1) : path || 'base64'
+    activeMenu.value = getActiveMenu(path)
   },
   { immediate: true }
 )
@@ -51,8 +59,23 @@ watch(
 // 侧边栏是否折叠
 const isCollapse = ref(false)
 
+// 菜单项接口
+interface MenuItem {
+  name: string
+  label: string
+  icon: any
+  path?: string
+  children?: MenuItem[]
+}
+
 // 菜单项配置 - 每个工具都有独特的图标
-const menuItems = computed(() => [
+const menuItems = computed<MenuItem[]>(() => [
+  {
+    name: 'home',
+    label: t('nav.home'),
+    icon: HomeFilled,
+    path: '/'
+  },
   {
     name: 'string',
     label: t('nav.string'),
@@ -127,7 +150,11 @@ onMounted(() => {
         router
       >
         <template v-for="item in menuItems" :key="item.name">
-          <el-sub-menu :index="item.name">
+          <el-menu-item v-if="!item.children?.length" :index="item.path || item.name">
+            <el-icon><component :is="item.icon" /></el-icon>
+            <span>{{ item.label }}</span>
+          </el-menu-item>
+          <el-sub-menu v-else :index="item.name">
             <template #title>
               <el-icon><component :is="item.icon" /></el-icon>
               <span>{{ item.label }}</span>
@@ -135,7 +162,7 @@ onMounted(() => {
             <el-menu-item
               v-for="child in item.children"
               :key="child.name"
-              :index="child.name"
+              :index="child.path || child.name"
             >
               <el-icon><component :is="child.icon" /></el-icon>
               <span>{{ child.label }}</span>

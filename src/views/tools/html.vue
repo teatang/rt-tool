@@ -55,7 +55,7 @@ const clear = () => {
       :icon="PictureFilled"
       :title="t('tools.html')"
       description="html"
-      color="#67c23a"
+      color="#f44336"
     />
     <el-row :gutter="20">
       <!-- 左侧：输入 -->

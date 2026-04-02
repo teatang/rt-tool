@@ -275,7 +275,7 @@ onBeforeUnmount(() => {
       :icon="Grid"
       :title="t('tools.tetris')"
       description="tetris"
-      color="#e6a23c"
+      color="#ffc107"
     />
 
     <div class="game-wrapper">

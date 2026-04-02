@@ -56,7 +56,7 @@ const clear = () => {
       :icon="Lock"
       :title="t('tools.encrypt')"
       description="encrypt"
-      color="#9c27b0"
+      color="#3f51b5"
     />
     <el-row :gutter="20">
       <el-col :span="12">

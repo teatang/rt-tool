@@ -70,7 +70,7 @@ const clear = () => {
       :icon="Files"
       :title="t('tools.json')"
       description="json"
-      color="#67c23a"
+      color="#ff9800"
     />
     <el-row :gutter="20">
       <!-- 左侧：输入 -->

@@ -53,7 +53,7 @@ const copyCode = async () => {
       :icon="Film"
       :title="t('tools.mermaid')"
       description="mermaid"
-      color="#9c27b0"
+      color="#e91e63"
     />
     <el-row :gutter="20">
       <el-col :span="12">

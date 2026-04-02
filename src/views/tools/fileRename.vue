@@ -140,7 +140,7 @@ watch(regexPattern, () => {
       :icon="EditPen"
       :title="t('tools.fileRename')"
       :description="t('fileRename')"
-      color="#67c23a"
+      color="#8bc34a"
     />
 
     <div class="rename-form">

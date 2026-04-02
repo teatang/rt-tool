@@ -54,7 +54,7 @@ const clear = () => {
       :icon="Key"
       :title="t('tools.base64')"
       description="base64"
-      color="#67c23a"
+      color="#4caf50"
     />
     <el-row :gutter="20">
       <!-- 左侧：输入 -->
