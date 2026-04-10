@@ -1,7 +1,10 @@
+mod tray;
+
 use std::fs;
 use std::path::Path;
 use std::io;
 use regex::Regex;
+use tauri::Manager;
 
 /// 跨设备重命名：先复制再删除源文件（带验证）
 fn rename_cross_device(from: &Path, to: &Path) -> io::Result<()> {
@@ -261,6 +264,23 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .setup(|app| {
+            // 初始化系统托盘
+            tray::init_tray(app.handle())?;
+
+            // 监听窗口关闭事件，点击关闭按钮时隐藏窗口而不是退出
+            let window = app.get_webview_window("main").unwrap();
+            let window_clone = window.clone();
+            window.on_window_event(move |event| {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    // 阻止窗口关闭，改为隐藏
+                    api.prevent_close();
+                    let _ = window_clone.hide();
+                }
+            });
+
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![greet, search_files, rename_file, reveal_in_explorer, list_dir_files, batch_rename])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
