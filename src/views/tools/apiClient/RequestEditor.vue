@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import {
   Position,
   DocumentChecked,
@@ -8,8 +8,13 @@ import {
   Delete
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import type { ApiRequestItem, HttpMethod, ApiRequestBodyType, ApiGroup } from '@/types/apiClient'
+import type { ApiRequestItem, HttpMethod, ApiRequestBodyType, ApiGroup, KeyValueItem } from '@/types/apiClient'
 import { jsonFormat, jsonCompress, isValidJson } from '@/utils/json'
+import {
+  extractUrlBaseAndParams,
+  mergeParamsWithExisting,
+  buildUrlWithParams
+} from '@/utils/urlParams'
 import KeyValueEditor from './KeyValueEditor.vue'
 
 const props = defineProps<{
@@ -62,7 +67,70 @@ const updateField = <K extends keyof ApiRequestItem>(field: K, value: ApiRequest
 }
 
 const handleNameChange = (val: string) => updateField('name', val)
-const handleUrlChange = (val: string) => updateField('url', val)
+
+const handleUrlChange = (val: string) => {
+  const { params, hasQuery } = extractUrlBaseAndParams(val)
+
+  if (hasQuery) {
+    // URL 中包含 GET 参数，自动解析并同步匹配到 Params 中
+    const mergedParams = mergeParamsWithExisting(params, props.request.params || [])
+    emit('update:request', {
+      ...props.request,
+      url: val,
+      params: mergedParams
+    })
+  } else {
+    // 检查之前是否曾含有 query 参数，若此前有而现在被用户删去，则清空 Params
+    const hadQuery = (props.request.url || '').includes('?')
+    if (hadQuery) {
+      emit('update:request', {
+        ...props.request,
+        url: val,
+        params: [
+          {
+            id: `param_${Date.now()}_default`,
+            key: '',
+            value: '',
+            enabled: true,
+            description: ''
+          }
+        ]
+      })
+    } else {
+      updateField('url', val)
+    }
+  }
+}
+
+const handleParamsChange = (newParams: KeyValueItem[]) => {
+  const newUrl = buildUrlWithParams(props.request.url, newParams)
+  emit('update:request', {
+    ...props.request,
+    url: newUrl,
+    params: newParams
+  })
+}
+
+// 当外部载入或切换包含 GET 参数的 URL 且当前 Params 为空时，自动提取补齐
+watch(
+  () => props.request.url,
+  (newUrl) => {
+    if (newUrl && newUrl.includes('?')) {
+      const currentValidParams = (props.request.params || []).filter((p) => p.key && p.key.trim() !== '')
+      if (currentValidParams.length === 0) {
+        const { params } = extractUrlBaseAndParams(newUrl)
+        if (params.length > 0) {
+          emit('update:request', {
+            ...props.request,
+            params: mergeParamsWithExisting(params, props.request.params || [])
+          })
+        }
+      }
+    }
+  },
+  { immediate: true }
+)
+
 const handleBodyTypeChange = (val: any) => updateField('bodyType', val as ApiRequestBodyType)
 const handleBodyRawChange = (val: string) => updateField('bodyRaw', val)
 const handleDescChange = (val: string) => updateField('description', val)
@@ -202,7 +270,7 @@ const handleSaveAs = () => {
               key-placeholder="参数名 (Key)"
               value-placeholder="参数值 (Value)"
               desc-placeholder="描述"
-              @update:model-value="(val) => updateField('params', val)"
+              @update:model-value="handleParamsChange"
             />
           </div>
         </el-tab-pane>

@@ -95,6 +95,7 @@ export function resolveRequest(
   )
 
   if (enabledParams.length > 0) {
+    const baseUrl = resolvedUrl.split('?')[0]
     const queryParts: string[] = []
     for (const p of enabledParams) {
       const k = encodeURIComponent(resolveVariables(p.key.trim(), activeEnv, globals))
@@ -102,10 +103,7 @@ export function resolveRequest(
       queryParts.push(`${k}=${v}`)
     }
     const queryString = queryParts.join('&')
-    if (queryString) {
-      const separator = resolvedUrl.includes('?') ? '&' : '?'
-      resolvedUrl = `${resolvedUrl}${separator}${queryString}`
-    }
+    resolvedUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl
   }
 
   // 3. 解析 Headers (只保留已启用且 key 非空的 headers)

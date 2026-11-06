@@ -17,6 +17,11 @@ import type {
 } from '@/types/apiClient'
 import { resolveRequest, createDefaultRequest } from '@/utils/variableResolver'
 import { generateCurlCommand } from '@/utils/curlGenerator'
+import {
+  extractUrlBaseAndParams,
+  mergeParamsWithExisting,
+  parseFormUrlEncoded
+} from '@/utils/urlParams'
 import CollectionSidebar from './apiClient/CollectionSidebar.vue'
 import RequestTabs from './apiClient/RequestTabs.vue'
 import RequestEditor from './apiClient/RequestEditor.vue'
@@ -388,23 +393,82 @@ const handleDuplicateRequest = (groupId: string, req: ApiRequestItem) => {
   }
 }
 
-// 历史记录点击：在当前或新标签页中打开历史请求
+// 历史记录点击：在当前或新标签页中打开历史请求，各项参数匹配到对应 input
 const handleSelectHistory = (historyItem: RequestHistoryItem) => {
-  const restoredRequest: ApiRequestItem = {
-    id: `req_hist_${Date.now()}`,
-    name: historyItem.name,
-    method: historyItem.sentRequest.method as any,
-    url: historyItem.sentRequest.url,
-    params: [],
-    headers: historyItem.sentRequest.headers.map((h, idx) => ({
-      id: `h_${idx}`,
+  let restoredRequest: ApiRequestItem
+
+  if (historyItem.request) {
+    // 1. 若历史项中记录了当时的请求草稿快照，深拷贝恢复
+    restoredRequest = JSON.parse(JSON.stringify(historyItem.request))
+    restoredRequest.id = `req_hist_${Date.now()}`
+    restoredRequest.name = historyItem.name
+    restoredRequest.updatedAt = historyItem.timestamp
+
+    // 确保 URL 中的 GET 参数与 params 保持同步匹配
+    if (restoredRequest.url && restoredRequest.url.includes('?')) {
+      const validParams = (restoredRequest.params || []).filter((p) => p.key && p.key.trim() !== '')
+      if (validParams.length === 0) {
+        const { params } = extractUrlBaseAndParams(restoredRequest.url)
+        if (params.length > 0) {
+          restoredRequest.params = mergeParamsWithExisting(params, restoredRequest.params || [])
+        }
+      }
+    }
+  } else {
+    // 2. 兼容历史项仅有 sentRequest 的情况：反向解析各项参数匹配到对应 input
+    const { params } = extractUrlBaseAndParams(historyItem.sentRequest.url)
+
+    const restoredHeaders = (historyItem.sentRequest.headers || []).map((h, idx) => ({
+      id: `h_${Date.now()}_${idx}`,
       key: h.key,
       value: h.value,
-      enabled: true
-    })),
-    bodyType: historyItem.sentRequest.bodyType as any,
-    bodyRaw: historyItem.sentRequest.body,
-    updatedAt: historyItem.timestamp
+      enabled: true,
+      description: ''
+    }))
+
+    const bodyType = historyItem.sentRequest.bodyType as any
+    let restoredBodyRaw = ''
+    let restoredBodyUrlEncoded: any[] = []
+
+    if (bodyType === 'x-www-form-urlencoded') {
+      restoredBodyUrlEncoded = parseFormUrlEncoded(historyItem.sentRequest.body || '')
+    } else if (bodyType === 'json' || bodyType === 'raw') {
+      restoredBodyRaw = historyItem.sentRequest.body || ''
+    }
+
+    restoredRequest = {
+      id: `req_hist_${Date.now()}`,
+      name: historyItem.name,
+      method: historyItem.sentRequest.method as any,
+      url: historyItem.sentRequest.url,
+      params: params.length > 0
+        ? mergeParamsWithExisting(params)
+        : [{ id: `p_${Date.now()}_default`, key: '', value: '', enabled: true, description: '' }],
+      headers: restoredHeaders.length > 0
+        ? restoredHeaders
+        : [{ id: `h_${Date.now()}_default`, key: '', value: '', enabled: true, description: '' }],
+      bodyType: bodyType || 'none',
+      bodyRaw: restoredBodyRaw,
+      bodyUrlEncoded: restoredBodyUrlEncoded,
+      description: '',
+      updatedAt: historyItem.timestamp
+    }
+  }
+
+  // 若当前标签是空白且未被修改，则直接在当前标签加载
+  if (
+    currentTab.value &&
+    !currentTab.value.requestId &&
+    !currentTab.value.isDirty &&
+    !currentTab.value.request.url
+  ) {
+    currentTab.value.title = `${historyItem.name} (历史)`
+    currentTab.value.request = restoredRequest
+    currentTab.value.response = historyItem.response
+    currentTab.value.sentRequest = historyItem.sentRequest
+    currentTab.value.isDirty = false
+    ElMessage.success('已载入历史请求各项参数')
+    return
   }
 
   const tab: ApiTabItem = {
@@ -419,7 +483,7 @@ const handleSelectHistory = (historyItem: RequestHistoryItem) => {
 
   tabs.value.push(tab)
   activeTabId.value = tab.tabId
-  ElMessage.success('已载入历史请求快照')
+  ElMessage.success('已载入历史请求各项参数并打开新标签页')
 }
 
 const handleClearHistory = () => {
@@ -575,6 +639,7 @@ const handleSendRequest = async () => {
     history.value.unshift({
       id: `hist_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       name: currentTab.value.title || req.name || '未命名接口',
+      request: JSON.parse(JSON.stringify(req)),
       sentRequest: sentDetail,
       response: respData,
       timestamp: Date.now()
@@ -602,6 +667,7 @@ const handleSendRequest = async () => {
     history.value.unshift({
       id: `hist_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       name: currentTab.value.title || req.name || '未命名接口',
+      request: JSON.parse(JSON.stringify(req)),
       sentRequest: sentDetail,
       response: errorRespData,
       timestamp: Date.now()

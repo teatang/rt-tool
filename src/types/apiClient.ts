@@ -78,6 +78,7 @@ export interface SentRequestDetail {
 export interface RequestHistoryItem {
   id: string
   name: string
+  request?: ApiRequestItem
   sentRequest: SentRequestDetail
   response: HttpResponseData
   timestamp: number
