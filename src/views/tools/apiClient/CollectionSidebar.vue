@@ -8,15 +8,24 @@ import {
   MoreFilled,
   CopyDocument,
   Delete,
-  Edit
+  Edit,
+  Clock,
+  Files
 } from '@element-plus/icons-vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import type { ApiGroup, ApiRequestItem, HttpMethod } from '@/types/apiClient'
+import type { ApiGroup, ApiRequestItem, HttpMethod, RequestHistoryItem } from '@/types/apiClient'
 
-const props = defineProps<{
-  groups: ApiGroup[]
-  activeRequestId: string | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    groups: ApiGroup[]
+    activeRequestId?: string | null
+    history?: RequestHistoryItem[]
+  }>(),
+  {
+    activeRequestId: null,
+    history: () => []
+  }
+)
 
 const emit = defineEmits<{
   (e: 'selectRequest', req: ApiRequestItem, groupId: string): void
@@ -27,8 +36,11 @@ const emit = defineEmits<{
   (e: 'deleteRequest', groupId: string, requestId: string): void
   (e: 'duplicateRequest', groupId: string, req: ApiRequestItem): void
   (e: 'update:groups', groups: ApiGroup[]): void
+  (e: 'selectHistory', item: RequestHistoryItem): void
+  (e: 'clearHistory'): void
 }>()
 
+const activeSidebarTab = ref<'collections' | 'history'>('collections')
 const searchQuery = ref('')
 
 // 搜索过滤后的分组
@@ -58,6 +70,19 @@ const filteredGroups = computed(() => {
       return null
     })
     .filter(Boolean) as ApiGroup[]
+})
+
+// 搜索过滤后的历史记录
+const filteredHistory = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase()
+  if (!query) return props.history
+
+  return props.history.filter(
+    (item) =>
+      item.sentRequest.url.toLowerCase().includes(query) ||
+      item.sentRequest.method.toLowerCase().includes(query) ||
+      item.name.toLowerCase().includes(query)
+  )
 })
 
 const toggleGroup = (group: ApiGroup) => {
@@ -102,6 +127,17 @@ const handleDeleteRequest = (groupId: string, req: ApiRequestItem) => {
   }).catch(() => {})
 }
 
+const handleClearHistory = () => {
+  ElMessageBox.confirm('确定要清空全部请求历史记录吗？', '清空历史', {
+    confirmButtonText: '清空',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    emit('clearHistory')
+    ElMessage.success('历史记录已清空')
+  }).catch(() => {})
+}
+
 const getMethodColor = (method: HttpMethod | string): string => {
   switch (method?.toUpperCase()) {
     case 'GET':
@@ -118,22 +154,51 @@ const getMethodColor = (method: HttpMethod | string): string => {
       return '#909399'
   }
 }
+
+const formatTime = (ts: number) => {
+  const d = new Date(ts)
+  const h = String(d.getHours()).padStart(2, '0')
+  const m = String(d.getMinutes()).padStart(2, '0')
+  const s = String(d.getSeconds()).padStart(2, '0')
+  return `${h}:${m}:${s}`
+}
 </script>
 
 <template>
   <div class="collection-sidebar">
-    <!-- 顶部操作栏 -->
+    <!-- 顶栏视图切换：集合 vs 历史 -->
+    <div class="sidebar-tab-switch">
+      <div
+        :class="['switch-btn', { active: activeSidebarTab === 'collections' }]"
+        @click="activeSidebarTab = 'collections'"
+      >
+        <el-icon><Files /></el-icon>
+        <span>接口分组</span>
+      </div>
+      <div
+        :class="['switch-btn', { active: activeSidebarTab === 'history' }]"
+        @click="activeSidebarTab = 'history'"
+      >
+        <el-icon><Clock /></el-icon>
+        <span>历史记录</span>
+        <span v-if="history.length > 0" class="tab-count-badge">{{ history.length }}</span>
+      </div>
+    </div>
+
+    <!-- 顶部搜索与操作栏 -->
     <div class="sidebar-header">
       <div class="search-box">
         <el-input
           v-model="searchQuery"
           size="small"
-          placeholder="搜索接口名称 / URL"
+          :placeholder="activeSidebarTab === 'collections' ? '搜索接口名称 / URL' : '搜索历史请求'"
           :prefix-icon="Search"
           clearable
         />
       </div>
-      <div class="action-buttons">
+
+      <!-- 集合操作按钮 -->
+      <div v-if="activeSidebarTab === 'collections'" class="action-buttons">
         <el-button
           type="primary"
           size="small"
@@ -150,10 +215,23 @@ const getMethodColor = (method: HttpMethod | string): string => {
           新建分组
         </el-button>
       </div>
+
+      <!-- 历史操作按钮 -->
+      <div v-else class="action-buttons">
+        <el-button
+          size="small"
+          :icon="Delete"
+          :disabled="history.length === 0"
+          style="width: 100%;"
+          @click="handleClearHistory"
+        >
+          清空历史
+        </el-button>
+      </div>
     </div>
 
-    <!-- 分组与接口树形列表 -->
-    <div class="group-tree">
+    <!-- 集合视图 -->
+    <div v-if="activeSidebarTab === 'collections'" class="group-tree">
       <div v-if="filteredGroups.length === 0" class="empty-tree">
         <el-text type="info" size="small">未找到相关接口或分组</el-text>
       </div>
@@ -254,6 +332,44 @@ const getMethodColor = (method: HttpMethod | string): string => {
         </div>
       </div>
     </div>
+
+    <!-- 历史记录视图 -->
+    <div v-else class="history-list-wrapper">
+      <div v-if="filteredHistory.length === 0" class="empty-tree">
+        <el-text type="info" size="small">暂无请求历史</el-text>
+      </div>
+
+      <div
+        v-for="item in filteredHistory"
+        :key="item.id"
+        class="history-item"
+        @click="emit('selectHistory', item)"
+      >
+        <div class="history-top-row">
+          <span
+            class="method-badge"
+            :style="{ color: getMethodColor(item.sentRequest.method) }"
+          >
+            {{ item.sentRequest.method }}
+          </span>
+
+          <el-tag
+            size="small"
+            :type="item.response.status >= 200 && item.response.status < 300 ? 'success' : 'danger'"
+            effect="plain"
+            class="history-status-tag"
+          >
+            {{ item.response.status || 'Err' }}
+          </el-tag>
+
+          <span class="history-time">{{ formatTime(item.timestamp) }}</span>
+        </div>
+
+        <div class="history-url" :title="item.sentRequest.url">
+          {{ item.sentRequest.url }}
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -269,8 +385,49 @@ const getMethodColor = (method: HttpMethod | string): string => {
   user-select: none;
 }
 
+.sidebar-tab-switch {
+  display: flex;
+  background-color: var(--el-fill-color-light);
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  padding: 4px;
+  gap: 4px;
+}
+
+.switch-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--el-text-color-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.switch-btn:hover {
+  color: var(--el-text-color-primary);
+}
+
+.switch-btn.active {
+  background-color: var(--el-bg-color);
+  color: var(--el-color-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.tab-count-badge {
+  background-color: var(--el-fill-color);
+  font-size: 10px;
+  padding: 0 5px;
+  border-radius: 10px;
+}
+
 .sidebar-header {
-  padding: 12px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -286,7 +443,8 @@ const getMethodColor = (method: HttpMethod | string): string => {
   flex: 1;
 }
 
-.group-tree {
+.group-tree,
+.history-list-wrapper {
   flex: 1;
   overflow-y: auto;
   padding: 6px 0;
@@ -416,5 +574,49 @@ const getMethodColor = (method: HttpMethod | string): string => {
 
 .request-item:hover .req-actions {
   opacity: 1;
+}
+
+/* 历史列表项样式 */
+.history-item {
+  padding: 8px 12px;
+  margin: 2px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history-item:hover {
+  background-color: var(--el-fill-color-light);
+}
+
+.history-top-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.history-status-tag {
+  font-size: 10px;
+  padding: 0 4px;
+  height: 18px;
+  line-height: 16px;
+}
+
+.history-time {
+  font-size: 11px;
+  color: var(--el-text-color-secondary);
+  margin-left: auto;
+}
+
+.history-url {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--el-text-color-regular);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

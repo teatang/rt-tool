@@ -64,3 +64,33 @@ export interface HttpResponseData {
   timestamp: number
   error?: string
 }
+
+export interface SentRequestDetail {
+  method: string
+  url: string
+  headers: { key: string; value: string }[]
+  bodyType: string
+  body: string
+  sentAt: number
+  curlCommand: string
+}
+
+export interface RequestHistoryItem {
+  id: string
+  name: string
+  sentRequest: SentRequestDetail
+  response: HttpResponseData
+  timestamp: number
+}
+
+export interface ApiTabItem {
+  tabId: string
+  requestId?: string
+  groupId?: string
+  title: string
+  isDirty?: boolean
+  request: ApiRequestItem
+  response: HttpResponseData | null
+  sentRequest: SentRequestDetail | null
+  isLoading: boolean
+}
