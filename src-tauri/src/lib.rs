@@ -1,4 +1,5 @@
 mod tray;
+mod api_client;
 
 use std::fs;
 use std::path::Path;
@@ -281,7 +282,17 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet, search_files, rename_file, reveal_in_explorer, list_dir_files, batch_rename])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            search_files,
+            rename_file,
+            reveal_in_explorer,
+            list_dir_files,
+            batch_rename,
+            api_client::api_client_send_http,
+            api_client::api_client_load_data,
+            api_client::api_client_save_data
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

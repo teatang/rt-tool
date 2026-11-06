@@ -29,7 +29,8 @@ import {
   Monitor,
   Grid,
   Operation,
-  HomeFilled
+  HomeFilled,
+  Connection
 } from '@element-plus/icons-vue'
 
 const { t } = useI18n()
@@ -103,6 +104,7 @@ const menuItems = computed<MenuItem[]>(() => [
     label: t('nav.other'),
     icon: Tools,
     children: [
+      { name: 'apiClient', label: t('tools.apiClient'), icon: Connection }, // API 调试
       { name: 'mermaid', label: t('tools.mermaid'), icon: Film },         // 图表/流程图
       { name: 'timestamp', label: t('tools.timestamp'), icon: Clock },    // 时间
       { name: 'uuid', label: t('tools.uuid'), icon: Stamp },              // 唯一标识

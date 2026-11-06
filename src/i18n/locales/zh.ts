@@ -28,6 +28,7 @@ export default {
     timestamp: '时间戳',
     uuid: 'UUID',
     encrypt: '加密',
+    apiClient: 'API 调试',
     tetris: '俄罗斯方块'
   },
   actions: {
@@ -99,6 +100,7 @@ export default {
     timestamp: '时间戳转换工具',
     uuid: 'UUID 生成器',
     encrypt: 'MD5/SHA 哈希加密工具',
+    apiClient: '全类型 HTTP 接口调试、环境变量与分组管理工具',
     tetris: '经典俄罗斯方块游戏'
   },
   tetris: {

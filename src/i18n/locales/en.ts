@@ -28,6 +28,7 @@ export default {
     timestamp: 'Timestamp',
     uuid: 'UUID',
     encrypt: 'Encrypt',
+    apiClient: 'API Client',
     tetris: 'Tetris'
   },
   actions: {
@@ -99,6 +100,7 @@ export default {
     timestamp: 'Timestamp conversion tool',
     uuid: 'UUID generator',
     encrypt: 'MD5/SHA hash encryption tool',
+    apiClient: 'HTTP API development and debugging tool with environments & collections',
     tetris: 'Classic Tetris game'
   },
   tetris: {

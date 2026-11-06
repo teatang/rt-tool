@@ -13,7 +13,8 @@ import {
   Clock,
   Stamp,
   Lock,
-  Grid
+  Grid,
+  Connection
 } from '@element-plus/icons-vue'
 
 const { t } = useI18n()
@@ -41,6 +42,7 @@ const fileTools: Tool[] = [
 ]
 
 const otherTools: Tool[] = [
+  { nameKey: 'tools.apiClient', descKey: 'apiClient', path: '/apiClient', icon: Connection, color: '#00bcd4' },
   { nameKey: 'tools.mermaid', descKey: 'mermaid', path: '/mermaid', icon: Film, color: '#e91e63' },
   { nameKey: 'tools.timestamp', descKey: 'timestamp', path: '/timestamp', icon: Clock, color: '#607d8b' },
   { nameKey: 'tools.uuid', descKey: 'uuid', path: '/uuid', icon: Stamp, color: '#673ab7' },

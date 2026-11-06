@@ -51,6 +51,11 @@ const routes = [
   },
   // 其他工具
   {
+    path: '/apiClient',
+    name: 'apiClient',
+    component: () => import('../views/tools/apiClient.vue')
+  },
+  {
     path: '/mermaid',
     name: 'mermaid',
     component: () => import('../views/tools/mermaid.vue')

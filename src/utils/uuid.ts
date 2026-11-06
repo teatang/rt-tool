@@ -26,16 +26,15 @@ export function generateUuidV4(): string {
  */
 export function generateUuidV1(): string {
   const now = Date.now()
-  const timeLow = (now & 0xffffffff).toString(16).padStart(8, '0')
-  const timeMid = ((now >> 32) & 0xffff).toString(16).padStart(4, '0')
-  const timeHiAndVersion = ((now >> 48) & 0x0fff) | 0x1000 // version 1
-  const clockSeqHiAndReserved = (Math.floor(Math.random() * 16384) & 0x3fff) | 0x8000
-  const clockSeqLow = clockSeqHiAndReserved & 0xff
+  const timeLow = (now >>> 0).toString(16).padStart(8, '0')
+  const timeMid = (Math.floor(now / 0x100000000) & 0xffff).toString(16).padStart(4, '0')
+  const timeHiAndVersion = ((Math.floor(now / 0x1000000000000) & 0x0fff) | 0x1000).toString(16).padStart(4, '0')
+  const clockSeq = ((Math.floor(Math.random() * 16384) & 0x3fff) | 0x8000).toString(16).padStart(4, '0')
   const node = Array.from({ length: 6 }, () =>
     Math.floor(Math.random() * 256).toString(16).padStart(2, '0')
   ).join('')
 
-  return `${timeLow}-${timeMid}-${timeHiAndVersion.toString(16).padStart(4, '0')}-${clockSeqHiAndReserved.toString(16).padStart(4, '0')}-${clockSeqLow.toString(16).padStart(2, '0')}${node}`
+  return `${timeLow}-${timeMid}-${timeHiAndVersion}-${clockSeq}-${node}`
 }
 
 /**
