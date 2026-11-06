@@ -51,14 +51,18 @@ pnpm release
 ### 目录结构
 
 - `src/` - Vue 3 前端源码
-  - `views/tools/` - 工具组件（base64、json、encrypt、fileSearch、fileRename 等）
-  - `utils/` - 纯 TypeScript 工具函数（含单元测试）
+  - `views/tools/` - 工具组件（base64、json、encrypt、fileSearch、fileRename、apiClient 等）
+    - `apiClient/` - API 调试客户端子组件（CollectionSidebar、RequestTabs、RequestEditor、ResponseViewer、EnvironmentManager、KeyValueEditor）
+  - `types/` - TypeScript 类型定义（apiClient.ts 等）
+  - `utils/` - 纯 TypeScript 工具函数（含单元测试：urlParams、variableResolver、curlGenerator、tetris、json 等）
   - `router/` - Vue Router 配置
   - `stores/` - Pinia 状态管理（theme）
   - `i18n/` - 国际化配置（en、zh）
   - `layouts/` - 布局组件
 - `src-tauri/` - Rust 后端源码
-  - `src/lib.rs` - Tauri 命令
+  - `src/lib.rs` - Tauri 命令与应用入口
+  - `src/api_client.rs` - API 客户端后端实现（原生 HTTP 请求、数据持久化）
+  - `src/tray.rs` - 系统托盘配置
   - `src/main.rs` - 入口文件
   - `tauri.conf.json` - Tauri 配置
 
@@ -72,15 +76,16 @@ import { invoke } from "@tauri-apps/api/core";
 const result = await invoke("command_name", { arg1: "value" });
 ```
 
-Rust 命令使用 `#[tauri::command]` 属性定义，位于 `src-tauri/src/lib.rs`。
+Rust 命令使用 `#[tauri::command]` 属性定义，位于 `src-tauri/src/lib.rs` 及子模块。
 
 **Tauri 插件**：使用 `tauri-plugin-opener`（文件资源管理器定位）和 `tauri-plugin-dialog`（原生对话框）。
 
 ### 可用工具
 
 - **字符串**：Base64、URL 编解码、JSON 格式化/压缩、HTML 格式化、SQL 格式化、正则测试
+- **网络**：API 客户端（多 Tab 编辑、环境变量与全局变量 `{{varName}}` 解析、接口集合树形分组与历史记录、实际请求审查快照与等效 cURL 生成、响应头过滤与格式化响应体、Rust 原生网络发起绕过 CORS 跨域限制）
 - **文件**：文件搜索（递归关键词搜索）、批量文件重命名
-- **其他**：Mermaid 图表编辑器、时间戳转换、UUID 生成器、MD5/SHA 加密
+- **其他**：Mermaid 图表编辑器、时间戳转换、UUID 生成器、MD5/SHA 加密、俄罗斯方块小游戏
 
 ### Rust 命令 (src-tauri/src/lib.rs)
 
@@ -90,3 +95,6 @@ Rust 命令使用 `#[tauri::command]` 属性定义，位于 `src-tauri/src/lib.r
 - `rename_file` - 单文件重命名（处理 Windows 跨驱动器移动）
 - `batch_rename` - 批量重命名文件
 - `reveal_in_explorer` - 在系统文件管理器中显示文件位置
+- `api_client_send_http` - 执行 HTTP/HTTPS 请求（避开浏览器同源 CORS 限制，返回状态码、Headers、响应体、耗时及体积）
+- `api_client_load_data` - 读取本地持久化的 API 客户端配置与请求集合数据
+- `api_client_save_data` - 保存 API 客户端数据至本地存储文件

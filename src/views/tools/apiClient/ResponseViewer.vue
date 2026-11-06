@@ -96,16 +96,19 @@ const filteredHeaders = computed(() => {
         :closable="false"
       />
       <div class="error-meta">
-        <el-tag size="small" type="info">耗时: {{ response.elapsedMs }} ms</el-tag>
+        <el-tag size="default" type="info" class="meta-tag">
+          <el-icon><Clock /></el-icon>
+          <span>{{ response.elapsedMs }} ms</span>
+        </el-tag>
       </div>
 
       <!-- 出错时也可以检查发出的请求 -->
       <div v-if="sentRequest" class="error-sent-check">
         <div class="sent-section-title">检查发出的请求：</div>
         <div class="sent-url-box">
-          <el-tag size="small" type="primary" effect="dark" class="sent-method-tag">{{ sentRequest.method }}</el-tag>
+          <el-tag size="default" type="primary" effect="dark" class="sent-method-tag">{{ sentRequest.method }}</el-tag>
           <span class="sent-url-text">{{ sentRequest.url }}</span>
-          <el-button link :icon="DocumentCopy" size="small" @click="copyText(sentRequest.url, 'URL')" />
+          <el-button link :icon="DocumentCopy" size="default" @click="copyText(sentRequest.url, 'URL')" />
         </div>
       </div>
     </div>
@@ -118,7 +121,7 @@ const filteredHeaders = computed(() => {
           <!-- 状态码 Badge -->
           <el-tag
             :type="getStatusTagType(response.status)"
-            size="large"
+            size="default"
             effect="dark"
             class="status-code-tag"
           >
@@ -138,14 +141,14 @@ const filteredHeaders = computed(() => {
           </el-tag>
 
           <!-- JSON 标识 -->
-          <el-tag v-if="isJson" size="small" type="success" effect="plain">
+          <el-tag v-if="isJson" size="default" type="success" effect="plain">
             JSON
           </el-tag>
         </div>
 
         <div class="status-actions">
           <el-button
-            size="small"
+            size="default"
             :icon="DocumentCopy"
             @click="copyText(formattedBody, '响应体')"
           >
@@ -181,9 +184,9 @@ const filteredHeaders = computed(() => {
             <div class="sent-section">
               <div class="sent-section-title">完整请求地址 (Resolved URL)</div>
               <div class="sent-url-box">
-                <el-tag size="small" type="primary" effect="dark" class="sent-method-tag">{{ sentRequest.method }}</el-tag>
+                <el-tag size="default" type="primary" effect="dark" class="sent-method-tag">{{ sentRequest.method }}</el-tag>
                 <span class="sent-url-text">{{ sentRequest.url }}</span>
-                <el-button link :icon="DocumentCopy" size="small" @click="copyText(sentRequest.url, 'URL')" />
+                <el-button link :icon="DocumentCopy" size="default" @click="copyText(sentRequest.url, 'URL')" />
               </div>
             </div>
 
@@ -191,7 +194,7 @@ const filteredHeaders = computed(() => {
             <div class="sent-section">
               <div class="sent-section-header">
                 <div class="sent-section-title">等效 cURL 命令行</div>
-                <el-button size="small" :icon="DocumentCopy" @click="copyText(sentRequest.curlCommand, 'cURL')">复制 cURL</el-button>
+                <el-button size="default" :icon="DocumentCopy" @click="copyText(sentRequest.curlCommand, 'cURL')">复制 cURL</el-button>
               </div>
               <el-input
                 :model-value="sentRequest.curlCommand"
@@ -233,7 +236,7 @@ const filteredHeaders = computed(() => {
             <div v-if="sentRequest.body" class="sent-section">
               <div class="sent-section-header">
                 <div class="sent-section-title">实际发送请求体 (Body)</div>
-                <el-button size="small" :icon="DocumentCopy" @click="copyText(sentRequest.body, '请求体')">复制请求体</el-button>
+                <el-button size="default" :icon="DocumentCopy" @click="copyText(sentRequest.body, '请求体')">复制请求体</el-button>
               </div>
               <el-input
                 :model-value="sentRequest.body"
@@ -267,7 +270,7 @@ const filteredHeaders = computed(() => {
               <el-input
                 v-model="headerSearch"
                 placeholder="过滤响应头"
-                size="small"
+                size="default"
                 :prefix-icon="Search"
                 clearable
                 style="max-width: 240px;"
@@ -330,6 +333,8 @@ const filteredHeaders = computed(() => {
   min-height: 240px;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .response-loading,
@@ -389,6 +394,7 @@ const filteredHeaders = computed(() => {
 .status-tags {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -398,9 +404,19 @@ const filteredHeaders = computed(() => {
 }
 
 .meta-tag {
-  display: flex;
+  display: inline-flex;
+  align-items: center;
+}
+
+.meta-tag :deep(.el-tag__content) {
+  display: inline-flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
+}
+
+.meta-tag :deep(.el-icon) {
+  font-size: 13px;
 }
 
 .header-badge {

@@ -835,6 +835,7 @@ onMounted(() => {
   border-radius: 8px;
   border: 1px solid var(--el-border-color-light);
   overflow: hidden;
+  min-width: 0;
 }
 
 .tab-workbench-content {
@@ -844,5 +845,13 @@ onMounted(() => {
   gap: 16px;
   overflow-y: auto;
   padding: 16px;
+  min-width: 0;
+}
+
+.tab-workbench-content::after {
+  content: '';
+  display: block;
+  height: 4px;
+  flex-shrink: 0;
 }
 </style>
