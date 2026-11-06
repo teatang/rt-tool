@@ -65,7 +65,7 @@ jobs:
           node-version: 22
       - uses: pnpm/action-setup@v3
         with:
-          version: latest
+          version: 9
 
       - name: Install rust target
         run: rustup target add ${{ matrix.target }}
