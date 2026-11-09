@@ -142,7 +142,7 @@ rt-tool/
 从 [Releases](https://github.com/teatang/rt-tool/releases) 页面下载对应平台的安装包：
 
 - **macOS**: `.dmg` 安装包
-- **Windows**: `.exe` / `.nsis` 安装包
+- **Windows**: `.msi` 安装包 / `.exe` 便携版
 - **Linux**: `.AppImage` / `.deb` 安装包
 
 ## 许可证

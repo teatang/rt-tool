@@ -1,55 +1,237 @@
+# ==============================================================================
+# RT Tool 自动化构建与发布工作流
+# 整体流程: check (校验) -> create-release (生成日志/草稿) -> build-app (6平台打包上传) -> publish-release (正式发布)
+# ==============================================================================
 name: rt-tool Release
 
 on:
+  # 方式 1：推送 v 开头的版本标签时自动触发（如 v0.4.4）
   push:
     tags:
       - 'v*'
+  # 方式 2：在 GitHub Actions 页面手动触发（可用于补传产物或重新构建指定版本）
   workflow_dispatch:
+    inputs:
+      tag:
+        description: '指定要发布的版本标签（如 v0.4.3）；留空则自动查找最新的 v* 标签'
+        required: false
+        type: string
+      draft:
+        description: '构建完成后是否保持为草稿状态（勾选后不会自动正式发布）'
+        required: false
+        type: boolean
+        default: false
+
+# 顶层遵循最小权限原则，仅授予读取仓库权限；写权限按需下放到具体作业
+permissions:
+  contents: read
+
+# 并发控制：针对同一版本标签的发布任务排队执行，避免多个任务同时操作同一个 Release 造成冲突
+# cancel-in-progress: false 确保正在上传产物的发布任务不会被新触发的任务中途打断
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
-  create-release:
+  # ----------------------------------------------------------------------------
+  # 阶段 1：前置测试与前端构建校验
+  # 在创建 Release 和启动 6 台跨平台构建机之前，先快速运行单测与 TypeScript/Vite 构建；
+  # 若代码存在问题可在 ~20 秒内快速失败，避免生成空草稿 Release 和浪费构建资源。
+  # ----------------------------------------------------------------------------
+  check:
+    name: Test & Build Check
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    timeout-minutes: 10
+    outputs:
+      # 向后续所有作业传递经过校验和规范化后的最终发布标签
+      tag: ${{ steps.resolve.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      # 检出目标代码：
+      # - 若显式传了 inputs.tag 或由 tag 事件触发，直接浅克隆（fetch-depth: 1）对应标签，速度最快
+      # - 若在默认分支手动触发且未填 tag，拉取完整历史（'0'）以便检索最新 v* 标签
+      #   注：GitHub 表达式中数字 0 为 falsy，因此使用字符串 '0' / '1' 避免恒取 1
+      - name: 检出仓库代码
+        uses: actions/checkout@v7
         with:
-          fetch-depth: 0
-      - name: Set output
-        id: vars
-        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+          ref: ${{ inputs.tag || (github.ref_type == 'tag' && github.ref) || '' }}
+          fetch-depth: ${{ (inputs.tag == '' && github.ref_type != 'tag') && '0' || '1' }}
 
-      - name: Setup node
-        uses: actions/setup-node@v4
+      # 解析并校验本次发布的目标标签，支持 tag 推送和多种手动触发方式
+      - name: 解析并校验发布标签
+        id: resolve
+        shell: bash
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          # 去除手填参数前后的空白字符，并兼容误填了 refs/tags/ 前缀的情况
+          TAG="${INPUT_TAG#"${INPUT_TAG%%[![:space:]]*}"}"
+          TAG="${TAG%"${TAG##*[![:space:]]}"}"
+          TAG="${TAG#refs/tags/}"
+
+          if [ -z "$TAG" ]; then
+            if [ "${{ github.ref_type }}" = "tag" ]; then
+              # 由 push tag 或在标签页手动触发时，直接使用当前标签名
+              TAG="${{ github.ref_name }}"
+            else
+              # 从分支手动触发且未指定标签时，查找当前历史中最新的 v* 标签并切换到该标签提交
+              git fetch --tags --quiet
+              TAG="$(git describe --tags --abbrev=0 --match 'v*')"
+              git checkout --detach "$TAG"
+            fi
+          fi
+
+          # 确认目标标签在本地仓库中真实存在，防止后续步骤构建错误代码
+          if ! git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::Tag '$TAG' does not exist"
+            exit 1
+          fi
+
+          echo "Resolved release tag: $TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      # 先安装 Node.js 22，便于 pnpm/action-setup 直接复用且避免下载独立的 @pnpm/exe
+      - name: 安装 Node.js
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
-      - name: Generate changelog
-        id: create_release
-        run: npx changelogithub --draft --name ${{ steps.vars.outputs.tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 安装 pnpm v9（与 pnpm-lock.yaml 的 lockfileVersion 9.0 保持一致）并开启 store 缓存
+      - name: 安装 pnpm 并配置缓存
+        uses: pnpm/action-setup@v6
+        with:
+          version: 9
+          cache: true
 
+      # 严格按锁文件安装依赖，防止锁文件与 package.json 不一致
+      - name: 安装前端依赖
+        run: pnpm install --frozen-lockfile
+
+      # 非交互式运行全量单元测试（不能用 pnpm test，避免 Vitest 进入 watch 模式）
+      - name: 运行单元测试
+        run: pnpm exec vitest run
+
+      # 执行 TypeScript 类型检查（vue-tsc --noEmit）与 Vite 生产构建验证
+      - name: 类型检查与前端构建
+        run: pnpm build
+
+  # ----------------------------------------------------------------------------
+  # 阶段 2：生成变更日志并创建/更新草稿 Release
+  # 统一由单一作业负责创建 Release 并输出 release_id，
+  # 避免 6 个构建任务并发查重/修改 Release 描述产生竞态条件。
+  # ----------------------------------------------------------------------------
+  create-release:
+    name: Create Release
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      release_id: ${{ steps.release.outputs.release_id }}
+      is_draft: ${{ steps.release.outputs.is_draft }}
+    steps:
+      # 必须设置 fetch-depth: 0 拉取完整提交记录与全部历史标签，changelogithub 才能计算上一版本到当前版本的变更区间
+      - name: 检出目标标签完整历史
+        uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ needs.check.outputs.tag }}
+          fetch-depth: 0
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # 使用固定主版本 changelogithub@15 生成 Markdown 变更日志并写入文件（不直接调用其发版接口，避免重复创建草稿）
+      - name: 生成版本变更日志
+        env:
+          # 提供 GITHUB_TOKEN 用于通过 GitHub API 解析提交作者的 @用户名
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx --yes changelogithub@15 \
+            --to "${{ needs.check.outputs.tag }}" \
+            --output release-notes.md
+
+      # 幂等地创建或更新 GitHub Release：
+      # 若该标签已有草稿/正式 Release 则直接更新标题与日志；若没有则新建草稿 Release
+      - name: 创建或更新 Release
+        id: release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.check.outputs.tag }}
+        run: |
+          # 标签中包含连字符（如 v0.5.0-beta.1 / v0.5.0-rc.1）时自动标记为预发布版
+          IS_PRERELEASE=false
+          if [[ "$TAG" == *-* ]]; then
+            IS_PRERELEASE=true
+          fi
+
+          # 分页查询仓库所有 Release（包含 draft），按草稿状态排序优先复用已存在的正式/草稿 Release
+          EXISTING_JSON=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            | jq -s --arg tag "$TAG" 'add | map(select(.tag_name == $tag)) | sort_by(.draft) | first // empty')
+
+          if [ -n "$EXISTING_JSON" ]; then
+            # 已存在对应 Release：更新名称、变更日志与 prerelease 标记，保留原 draft 状态
+            RELEASE_ID=$(printf '%s' "$EXISTING_JSON" | jq -r '.id')
+            IS_DRAFT=$(printf '%s' "$EXISTING_JSON" | jq -r '.draft')
+            jq -n \
+              --arg name "$TAG" \
+              --rawfile body release-notes.md \
+              --argjson prerelease "$IS_PRERELEASE" \
+              '{name: $name, body: $body, prerelease: $prerelease}' \
+              | gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" --input - >/dev/null
+          else
+            # 尚不存在：创建草稿 Release，待全部平台打包上传完成后再由 publish-release 统一发布
+            IS_DRAFT=true
+            CREATED_JSON=$(jq -n \
+              --arg tag "$TAG" \
+              --arg name "$TAG" \
+              --rawfile body release-notes.md \
+              --argjson draft true \
+              --argjson prerelease "$IS_PRERELEASE" \
+              '{tag_name: $tag, name: $name, body: $body, draft: $draft, prerelease: $prerelease}' \
+              | gh api -X POST "repos/$GITHUB_REPOSITORY/releases" --input -)
+            RELEASE_ID=$(printf '%s' "$CREATED_JSON" | jq -r '.id')
+          fi
+
+          # 防御性校验：确保拿到了有效的数字 release_id 再启动下游 6 个构建任务
+          if [ -z "$RELEASE_ID" ] || [ "$RELEASE_ID" = "null" ]; then
+            echo "::error::Failed to resolve release_id for $TAG"
+            exit 1
+          fi
+
+          echo "release_id=$RELEASE_ID" >> "$GITHUB_OUTPUT"
+          echo "is_draft=$IS_DRAFT" >> "$GITHUB_OUTPUT"
+
+  # ----------------------------------------------------------------------------
+  # 阶段 3：跨平台矩阵打包并上传安装产物
+  # 覆盖 macOS (ARM64/x64)、Windows (x64/ARM64)、Linux (x64/ARM64) 共 6 个目标架构
+  # ----------------------------------------------------------------------------
   build-app:
-    needs: create-release
+    name: Build (${{ matrix.target }})
+    needs: [check, create-release]
+    timeout-minutes: 45
     permissions:
       contents: write
     strategy:
+      # 某个平台失败时不立即取消其余平台构建，便于一次性发现所有平台的兼容问题
       fail-fast: false
       matrix:
         include:
+          # macOS Apple Silicon (M 系列) 与 Intel
           - platform: macos-latest
             target: aarch64-apple-darwin
           - platform: macos-latest
             target: x86_64-apple-darwin
 
+          # Windows x64 与 ARM64（构建 MSI 安装包，并通过 uploadPlainBinary 附带便携版 exe）
           - platform: windows-latest
             target: x86_64-pc-windows-msvc
-          # - platform: windows-latest
-          #   target: i686-pc-windows-msvc
           - platform: windows-latest
             target: aarch64-pc-windows-msvc
 
+          # Linux 选用 Ubuntu 22.04 以依赖更低版本的 glibc，确保 AppImage/deb 兼容更多发行版
           - platform: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
           - platform: ubuntu-22.04-arm
@@ -57,52 +239,85 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Setup node
-        uses: actions/setup-node@v4
+      # 精确检出本次要发布的标签提交，避免手动从分支触发时误打包成最新分支代码
+      - name: 检出发布标签代码
+        uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ needs.check.outputs.tag }}
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v7
         with:
           node-version: 22
-      - uses: pnpm/action-setup@v3
+
+      - name: 安装 pnpm 并配置缓存
+        uses: pnpm/action-setup@v6
         with:
           version: 9
+          cache: true
 
-      - name: Install rust target
-        run: rustup target add ${{ matrix.target }}
-
-      - name: Install dependencies (ubuntu only)
+      # 仅在 Ubuntu 构建机安装 Tauri v2 (WebKitGTK / 托盘图标 / SVG / AppImage 打包) 所需系统依赖
+      - name: 安装 Linux 系统构建依赖
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev libudev-dev patchelf xdg-utils
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-      - name: Install Rust stable
+      # 安装 Rust stable 工具链并同时安装对应的目标架构（避免先装 target 再装 toolchain 导致版本不匹配）
+      - name: 安装 Rust 工具链与目标架构
         uses: dtolnay/rust-toolchain@stable
-
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
         with:
-          workspaces: target
+          targets: ${{ matrix.target }}
 
-      - name: Sync node version and setup cache
-        uses: actions/setup-node@v4
+      # 缓存 Rust 依赖与编译产物：
+      # - workspaces 指向 src-tauri -> target，正确匹配本项目的 Cargo 工作区目录
+      # - key 绑定 matrix.target，防止 macOS/Windows 同宿主 Runner 的不同目标架构互相覆盖缓存
+      - name: 配置 Rust 编译缓存
+        uses: Swatinem/rust-cache@v2
         with:
-          node-version: 22
-          cache: pnpm
+          workspaces: 'src-tauri -> target'
+          key: ${{ matrix.target }}
 
-      - name: Install front-end dependencies
+      # 为 Tauri beforeBuildCommand (pnpm build) 准备前端依赖
+      - name: 安装前端依赖
         run: pnpm install --frozen-lockfile
 
-      - name: Build the app
-        uses: tauri-apps/tauri-action@v0
+      # 执行 tauri build 并将生成的安装包上传到指定 releaseId：
+      # - 直接使用 releaseId，跳过搜索/修改 Release 标题与正文
+      # - 仅在 Windows 上同时上传独立便携版 .exe（不上传 macOS/Linux 裸二进制）
+      # - 未配置 Tauri 自动更新器，关闭 uploadUpdaterJson
+      # - 开启 retryAttempts: 2，自动重试上传或 AppImage 打包时的偶发网络抖动
+      - name: 构建 Tauri 应用并上传产物
+        uses: tauri-apps/tauri-action@v1
         env:
-          CI: false
-          PLATFORM: ${{ matrix.platform }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: BongoCat ${{ github.ref_name }}
-          releaseBody: ''
-          releaseDraft: true
-          prerelease: false
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          tagName: ${{ needs.check.outputs.tag }}
+          uploadPlainBinary: ${{ startsWith(matrix.platform, 'windows') }}
+          uploadUpdaterJson: false
+          retryAttempts: 2
           args: --target ${{ matrix.target }}
+
+  # ----------------------------------------------------------------------------
+  # 阶段 4：自动正式发布 Release
+  # 仅当 check、create-release 与全部 6 个平台的 build-app 都成功，
+  # 且未在手动触发时勾选 draft: true 时，将草稿状态切换为正式发布。
+  # ----------------------------------------------------------------------------
+  publish-release:
+    name: Publish Release
+    needs: [check, create-release, build-app]
+    if: ${{ inputs.draft != true && needs.create-release.outputs.is_draft == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: 将草稿 Release 转为正式发布
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ needs.create-release.outputs.release_id }}
+        run: |
+          jq -n --argjson draft false '{draft: $draft}' \
+            | gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" --input - >/dev/null
+          echo "Published release $RELEASE_ID for ${{ needs.check.outputs.tag }}"
