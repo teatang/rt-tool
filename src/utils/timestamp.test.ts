@@ -30,20 +30,23 @@ describe('timestamp utils', () => {
   // 测试 timestampToDate
   describe('timestampToDate', () => {
     it('should convert timestamp to date string', () => {
-      // 2024-01-01 00:00:00 UTC = 1704067200
-      const result = timestampToDate(1704067200, 'zh')
+      // 2024-06-15 12:00:00 UTC = 1718452800（年中时刻，所有时区均落在 2024 年）
+      const result = timestampToDate(1718452800, 'zh')
+      expect(result).toBe(new Date(1718452800 * 1000).toLocaleString('zh-CN'))
       expect(result).toContain('2024')
     })
 
     it('should handle string timestamp', () => {
-      const result = timestampToDate('1704067200', 'en')
+      const result = timestampToDate('1718452800', 'en')
+      expect(result).toBe(new Date(1718452800 * 1000).toLocaleString('en-US'))
       expect(result).toContain('2024')
     })
 
     it('should handle negative timestamp', () => {
       const result = timestampToDate(-1, 'zh')
-      // Negative timestamps are valid but represent dates before 1970
-      expect(result).toContain('1970')
+      expect(result).toBe(new Date(-1000).toLocaleString('zh-CN'))
+      // -172800 = 1969-12-30 00:00:00 UTC（所有时区均落在 1969 年）
+      expect(timestampToDate(-172800, 'zh')).toContain('1969')
     })
   })
 
@@ -65,13 +68,15 @@ describe('timestamp utils', () => {
   // 测试 formatDate
   describe('formatDate', () => {
     it('should format date with Date object', () => {
-      const date = new Date(1704067200000)
+      const date = new Date(1718452800000)
       const result = formatDate(date, 'zh')
+      expect(result).toBe(date.toLocaleString('zh-CN'))
       expect(result).toContain('2024')
     })
 
     it('should format date with timestamp', () => {
-      const result = formatDate(1704067200000, 'en')
+      const result = formatDate(1718452800000, 'en')
+      expect(result).toBe(new Date(1718452800000).toLocaleString('en-US'))
       expect(result).toContain('2024')
     })
   })
