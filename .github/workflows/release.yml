@@ -222,20 +222,32 @@ jobs:
           # macOS Apple Silicon (M 系列) 与 Intel
           - platform: macos-latest
             target: aarch64-apple-darwin
+            os: mac
+            arch: arm64
           - platform: macos-latest
             target: x86_64-apple-darwin
+            os: mac
+            arch: x64
 
           # Windows x64 与 ARM64（构建 MSI 安装包，并通过 uploadPlainBinary 附带便携版 exe）
           - platform: windows-latest
             target: x86_64-pc-windows-msvc
+            os: win
+            arch: x64
           - platform: windows-latest
             target: aarch64-pc-windows-msvc
+            os: win
+            arch: arm64
 
           # Linux 选用 Ubuntu 22.04 以依赖更低版本的 glibc，确保 AppImage/deb 兼容更多发行版
           - platform: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
+            os: linux
+            arch: x64
           - platform: ubuntu-22.04-arm
             target: aarch64-unknown-linux-gnu
+            os: linux
+            arch: arm64
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -257,11 +269,12 @@ jobs:
           cache: true
 
       # 仅在 Ubuntu 构建机安装 Tauri v2 (WebKitGTK / 托盘图标 / SVG / AppImage 打包) 所需系统依赖
+      # 注：ubuntu-22.04-arm 精简镜像未预装 xdg-utils，tauri-bundler 打包 AppImage 时需要复制 /usr/bin/xdg-open
       - name: 安装 Linux 系统构建依赖
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils file
 
       # 安装 Rust stable 工具链并同时安装对应的目标架构（避免先装 target 再装 toolchain 导致版本不匹配）
       - name: 安装 Rust 工具链与目标架构
@@ -284,6 +297,8 @@ jobs:
 
       # 执行 tauri build 并将生成的安装包上传到指定 releaseId：
       # - 直接使用 releaseId，跳过搜索/修改 Release 标题与正文
+      # - 通过 releaseAssetNamePattern 统一产物命名：软件名-系统(mac/win/linux)-架构(arm64/x64)-v版本号.扩展名
+      #   （使用 [mainBinaryName] 而非 [name]，避免 uploadPlainBinary 上传的便携版 exe 变成 binary-...exe）
       # - 仅在 Windows 上同时上传独立便携版 .exe（不上传 macOS/Linux 裸二进制）
       # - 未配置 Tauri 自动更新器，关闭 uploadUpdaterJson
       # - 开启 retryAttempts: 2，自动重试上传或 AppImage 打包时的偶发网络抖动
@@ -294,6 +309,7 @@ jobs:
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           tagName: ${{ needs.check.outputs.tag }}
+          releaseAssetNamePattern: '[mainBinaryName]-${{ matrix.os }}-${{ matrix.arch }}-v[version][ext]'
           uploadPlainBinary: ${{ startsWith(matrix.platform, 'windows') }}
           uploadUpdaterJson: false
           retryAttempts: 2
